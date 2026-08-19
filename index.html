@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weight &amp; BMI · tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E4E7E1;--card:#FBFBF9;--ink:#16202A;--line:#00693E;--line-soft:#B9D3C4;
+  --amber:#B8791F;--muted:#68727C;--rule:#CBD1CA;
+  --shadow:0 1px 2px rgba(22,32,42,.06),0 8px 24px rgba(22,32,42,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 70px}
+.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
+h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(28px,5.5vw,44px);
+  letter-spacing:-.03em;line-height:.95;margin:0;text-transform:uppercase}
+h1 em{font-style:normal;color:var(--line)}
+.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-align:right}
+.meta b{color:var(--ink);font-weight:600}
+
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;
+  box-shadow:var(--shadow)}
+.stat .k{font-family:'Archivo',sans-serif;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.stat .v{font-family:'IBM Plex Mono',monospace;font-size:25px;font-weight:600;line-height:1.1}
+.stat .s{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
+.down{color:var(--line)}.up{color:var(--amber)}
+
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:3px;
+  padding:18px;box-shadow:var(--shadow);margin-bottom:20px}
+.section-head{font-family:'Archivo',sans-serif;font-weight:800;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.1em;margin:0 0 14px;padding-bottom:7px;
+  border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.section-head .legend{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  font-weight:400;letter-spacing:.02em;text-transform:none;color:var(--muted);display:flex;gap:14px}
+.swatch{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gridline{stroke:var(--rule);stroke-width:1}
+.axis{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--muted)}
+.dot{cursor:pointer}
+.dot:hover{r:6}
+
+form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+label{display:flex;flex-direction:column;gap:5px;font-family:'Archivo',sans-serif;
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+input[type=date],input[type=number]{font-family:'IBM Plex Mono',monospace;font-size:15px;
+  padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:#fff;color:var(--ink)}
+input[type=number]{width:110px}
+.chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;font-size:13px;
+  font-family:'IBM Plex Sans',sans-serif;letter-spacing:0;color:var(--ink);padding-bottom:9px}
+button.add{font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;
+  letter-spacing:.09em;background:var(--line);color:#fff;border:0;border-radius:3px;
+  padding:11px 20px;cursor:pointer}
+button.add:hover{background:#005633}
+button:focus-visible,input:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule)}
+th{font-family:'Archivo',sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+td.num{font-family:'IBM Plex Mono',monospace}
+tr:last-child td{border-bottom:0}
+.flagrow td{color:var(--muted)}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
+  letter-spacing:.06em;background:#EDE4D2;color:var(--amber);padding:2px 7px;border-radius:2px}
+.del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:0 4px}
+.del:hover{color:#B03030}
+.note{background:#DFE6DE;border-left:3px solid var(--line);padding:12px 15px;font-size:14px;
+  line-height:1.6;margin:16px 0 0;border-radius:0 3px 3px 0}
+.empty{color:var(--muted);font-size:14px;padding:14px 0}
+@media (max-width:560px){.wrap{padding:20px 14px 50px}.meta{text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="mast">
+  <h1>Weight<br><em>&amp; BMI</em></h1>
+  <div class="meta">HEIGHT <b>172 cm</b><br>START <b>81.5 kg</b> · 17 AUG 2026<br id="metabreak">TARGET RANGE <b>18.5–24.9</b> BMI</div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="panel">
+  <div class="section-head">The trend
+    <span class="legend">
+      <span><span class="swatch" style="background:#00693E"></span>Weight kg</span>
+      <span><span class="swatch" style="background:#B8791F"></span>BMI</span>
+    </span>
+  </div>
+  <div id="chart"></div>
+</div>
+
+<div class="panel">
+  <div class="section-head">Add a reading</div>
+  <form id="f">
+    <label>Date<input type="date" id="d" required></label>
+    <label>Weight (kg)<input type="number" id="w" step="0.1" min="30" max="250" placeholder="81.5" required></label>
+    <label class="chk"><input type="checkbox" id="flag"> Not fasted / clothed</label>
+    <button class="add" type="submit">Add reading</button>
+  </form>
+  <div class="note"><b>Weigh the same way every time</b> — morning, after the loo, before food, minimal clothing. Readings ticked as "not fasted" show as hollow dots and are left out of the trend maths, because clothes and a meal are worth well over a kilo and would otherwise look like real change.</div>
+</div>
+
+<div class="panel">
+  <div class="section-head">Every reading</div>
+  <div id="log"></div>
+</div>
+
+<div class="panel">
+  <div class="section-head">Reading this honestly</div>
+  <p style="margin:0 0 12px;font-size:14.5px">The two lines move in lockstep — BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. It's here because clinicians use it, not because it adds information.</p>
+  <p style="margin:0 0 12px;font-size:14.5px">BMI also can't distinguish muscle from fat, and takes no account of where fat sits. Waist measurement is the better single number for the visceral fat you're targeting — worth taking once a week at the navel, same time of day.</p>
+  <p style="margin:0;font-size:14.5px">Day-to-day movement of half a kilo either way is water, salt and gut contents, not fat. The line that matters is the one drawn over a fortnight.</p>
+</div>
+
+</div>
+<script>
+const H=1.72, H2=H*H;
+const SEED=[
+ {date:"2026-08-17",kg:81.5,flag:false},
+ {date:"2026-08-18",kg:81.5,flag:false},
+ {date:"2026-08-18",kg:82.9,flag:true},
+ {date:"2026-08-19",kg:80.7,flag:false}
+];
+let data=[];
+
+async function save(){try{await window.storage.set("wbmi",JSON.stringify(data));}catch(e){}}
+async function load(){
+  try{const r=await window.storage.get("wbmi");
+    if(r&&r.value){data=JSON.parse(r.value);return;}}catch(e){}
+  data=SEED.slice();
+}
+const bmi=kg=>kg/H2;
+const fmtD=s=>{const d=new Date(s+"T12:00");return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});};
+const clean=()=>data.filter(r=>!r.flag).sort((a,b)=>a.date.localeCompare(b.date));
+
+function band(b){
+  if(b<18.5)return"Underweight";
+  if(b<25)return"Healthy";
+  if(b<30)return"Overweight";
+  return"Obese";
+}
+
+function drawStats(){
+  const c=clean(),el=document.getElementById("stats");
+  if(!c.length){el.innerHTML="";return;}
+  const first=c[0],last=c[c.length-1];
+  const dk=last.kg-first.kg, b=bmi(last.kg);
+  const toHealthy=+(last.kg-24.9*H2).toFixed(1);
+  el.innerHTML=`
+  <div class="stat"><div class="k">Latest weight</div>
+    <div class="v">${last.kg.toFixed(1)}<span style="font-size:14px"> kg</span></div>
+    <div class="s">${fmtD(last.date)}</div></div>
+  <div class="stat"><div class="k">Latest BMI</div>
+    <div class="v">${b.toFixed(1)}</div><div class="s">${band(b)}</div></div>
+  <div class="stat"><div class="k">Change</div>
+    <div class="v ${dk<0?'down':dk>0?'up':''}">${dk>0?"+":""}${dk.toFixed(1)}<span style="font-size:14px"> kg</span></div>
+    <div class="s">since ${fmtD(first.date)}</div></div>
+  <div class="stat"><div class="k">To BMI 24.9</div>
+    <div class="v">${toHealthy>0?toHealthy.toFixed(1):"0"}<span style="font-size:14px"> kg</span></div>
+    <div class="s">${toHealthy>0?"~"+Math.ceil(toHealthy/0.5)+" weeks at 0.5 kg":"in range"}</div></div>`;
+}
+
+function drawChart(){
+  const all=[...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const box=document.getElementById("chart");
+  if(all.length<1){box.innerHTML='<p class="empty">No readings yet.</p>';return;}
+  const W=880,Ht=300,mL=48,mR=52,mT=16,mB=34;
+  const iw=W-mL-mR, ih=Ht-mT-mB;
+  const dates=[...new Set(all.map(r=>r.date))].sort();
+  const x=d=>dates.length<2?mL+iw/2:mL+(dates.indexOf(d)/(dates.length-1))*iw;
+  const ks=all.map(r=>r.kg);
+  let lo=Math.min(...ks)-1.2, hi=Math.max(...ks)+1.2;
+  const y=k=>mT+ih-((k-lo)/(hi-lo))*ih;
+
+  let ticks="",grid="";
+  for(let i=0;i<=4;i++){
+    const k=lo+(hi-lo)*i/4, yy=y(k);
+    grid+=`<line class="gridline" x1="${mL}" y1="${yy}" x2="${mL+iw}" y2="${yy}"/>`;
+    ticks+=`<text class="axis" x="${mL-8}" y="${yy+3.5}" text-anchor="end">${k.toFixed(1)}</text>`+
+           `<text class="axis" x="${mL+iw+8}" y="${yy+3.5}" fill="#B8791F">${bmi(k).toFixed(1)}</text>`;
+  }
+  const xlab=dates.map(d=>`<text class="axis" x="${x(d)}" y="${mT+ih+18}" text-anchor="middle">${fmtD(d)}</text>`).join("");
+
+  const c=clean();
+  const path=c.length>1?`<polyline fill="none" stroke="#00693E" stroke-width="2.5"
+     stroke-linejoin="round" points="${c.map(r=>x(r.date)+","+y(r.kg)).join(" ")}"/>`:"";
+  const bpath=c.length>1?`<polyline fill="none" stroke="#B8791F" stroke-width="2" stroke-dasharray="5 4"
+     points="${c.map(r=>x(r.date)+","+y(r.kg)).join(" ")}" opacity=".55"/>`:"";
+  const dots=all.map(r=>r.flag
+    ?`<circle class="dot" cx="${x(r.date)}" cy="${y(r.kg)}" r="4.5" fill="#FBFBF9" stroke="#B8791F" stroke-width="2"><title>${fmtD(r.date)} · ${r.kg} kg · not fasted, excluded</title></circle>`
+    :`<circle class="dot" cx="${x(r.date)}" cy="${y(r.kg)}" r="4.5" fill="#00693E"><title>${fmtD(r.date)} · ${r.kg} kg · BMI ${bmi(r.kg).toFixed(1)}</title></circle>`).join("");
+
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Weight and BMI over time">
+    ${grid}${ticks}${xlab}${bpath}${path}${dots}
+    <text class="axis" x="${mL}" y="${mT-4}" font-size="9">KG</text>
+    <text class="axis" x="${mL+iw}" y="${mT-4}" font-size="9" fill="#B8791F" text-anchor="end">BMI</text>
+  </svg>`;
+}
+
+function drawLog(){
+  const el=document.getElementById("log");
+  if(!data.length){el.innerHTML='<p class="empty">Nothing logged yet. Add your first reading above.</p>';return;}
+  const rows=[...data].sort((a,b)=>b.date.localeCompare(a.date));
+  el.innerHTML=`<table><thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Note</th><th></th></tr></thead><tbody>
+  ${rows.map(r=>{const i=data.indexOf(r);return `<tr class="${r.flag?'flagrow':''}">
+    <td class="num">${fmtD(r.date)}</td>
+    <td class="num">${r.kg.toFixed(1)} kg</td>
+    <td class="num">${bmi(r.kg).toFixed(1)}</td>
+    <td>${r.flag?'<span class="pill">not fasted</span>':band(bmi(r.kg))}</td>
+    <td style="text-align:right"><button class="del" data-i="${i}" aria-label="Delete reading">×</button></td>
+  </tr>`}).join("")}</tbody></table>`;
+  el.querySelectorAll(".del").forEach(b=>b.onclick=()=>{
+    data.splice(+b.dataset.i,1);save();render();});
+}
+
+function render(){drawStats();drawChart();drawLog();}
+
+document.getElementById("f").onsubmit=e=>{
+  e.preventDefault();
+  const d=document.getElementById("d").value, w=parseFloat(document.getElementById("w").value);
+  if(!d||!w)return;
+  data.push({date:d,kg:w,flag:document.getElementById("flag").checked});
+  document.getElementById("w").value="";document.getElementById("flag").checked=false;
+  save();render();
+};
+document.getElementById("d").value=new Date().toISOString().slice(0,10);
+load().then(render);
+</script>
+</body>
+</html>
