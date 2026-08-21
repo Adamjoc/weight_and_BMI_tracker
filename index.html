@@ -100,10 +100,22 @@ tr:last-child td{border-bottom:0}
 </div>
 
 <div class="panel">
+  <div class="section-head">Waist
+    <span class="legend">
+      <span><span class="swatch" style="background:#6A4C93"></span>Waist cm</span>
+      <span><span class="swatch" style="background:#68727C"></span>Target 86 cm</span>
+    </span>
+  </div>
+  <div id="chart2"></div>
+  <div class="note" style="margin-top:14px"><b>Measure it the same way each time</b> — standing, first thing, before food. Tape at the midpoint between your lowest rib and the top of your hip bone, snug but not compressing. Breathe out normally and read it then; don't hold it in. Once a week is plenty.</div>
+</div>
+
+<div class="panel">
   <div class="section-head">Add a reading</div>
   <form id="f">
     <label>Date<input type="date" id="d" required></label>
     <label>Weight (kg)<input type="number" id="w" step="0.1" min="30" max="250" placeholder="81.5" required></label>
+    <label>Waist (cm)<input type="number" id="wa" step="0.5" min="50" max="200" placeholder="optional"></label>
     <label class="chk"><input type="checkbox" id="flag"> Not fasted / clothed</label>
     <button class="add" type="submit">Add reading</button>
   </form>
@@ -119,7 +131,8 @@ tr:last-child td{border-bottom:0}
   <div class="section-head">Reading this honestly</div>
   <p style="margin:0 0 12px;font-size:14.5px">The two lines move in lockstep — BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. It's here because clinicians use it, not because it adds information.</p>
   <p style="margin:0 0 12px;font-size:14.5px">BMI also can't distinguish muscle from fat, and takes no account of where fat sits. Waist measurement is the better single number for the visceral fat you're targeting — worth taking once a week at the navel, same time of day.</p>
-  <p style="margin:0;font-size:14.5px">Day-to-day movement of half a kilo either way is water, salt and gut contents, not fat. The line that matters is the one drawn over a fortnight.</p>
+  <p style="margin:0 0 12px;font-size:14.5px">Day-to-day movement of half a kilo either way is water, salt and gut contents, not fat. The line that matters is the one drawn over a fortnight.</p>
+  <p style="margin:0;font-size:14.5px"><b>On the waist target:</b> keeping your waist under half your height &mdash; 86 cm at 172 cm &mdash; is the threshold with the best evidence behind it, and it maps onto visceral fat far better than BMI does. The NHS uses a more forgiving line for men: under 94 cm low risk, 94&ndash;102 increased, over 102 high. Weekly is often enough; it moves more slowly than the scale but it moves more honestly.</p>
 </div>
 
 </div>
@@ -129,7 +142,8 @@ const SEED=[
  {date:"2026-08-17",kg:81.5,flag:false},
  {date:"2026-08-18",kg:81.5,flag:false},
  {date:"2026-08-18",kg:82.9,flag:true},
- {date:"2026-08-19",kg:80.7,flag:false}
+ {date:"2026-08-19",kg:80.7,flag:false},
+ {date:"2026-08-20",kg:82.5,flag:false}
 ];
 let data=[];
 
@@ -143,6 +157,15 @@ const bmi=kg=>kg/H2;
 const fmtD=s=>{const d=new Date(s+"T12:00");return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});};
 const clean=()=>data.filter(r=>!r.flag).sort((a,b)=>a.date.localeCompare(b.date));
 
+const H_CM=172, WAIST_TARGET=+(H_CM*0.5).toFixed(0);
+const whtr=w=>w/H_CM;
+function waistBand(w){
+  const r=whtr(w);
+  if(r<0.4)return"Below range";
+  if(r<0.5)return"Healthy";
+  if(r<0.6)return"Increased risk";
+  return"High risk";
+}
 function band(b){
   if(b<18.5)return"Underweight";
   if(b<25)return"Healthy";
@@ -167,7 +190,52 @@ function drawStats(){
     <div class="s">since ${fmtD(first.date)}</div></div>
   <div class="stat"><div class="k">To BMI 24.9</div>
     <div class="v">${toHealthy>0?toHealthy.toFixed(1):"0"}<span style="font-size:14px"> kg</span></div>
-    <div class="s">${toHealthy>0?"~"+Math.ceil(toHealthy/0.5)+" weeks at 0.5 kg":"in range"}</div></div>`;
+    <div class="s">${toHealthy>0?"~"+Math.ceil(toHealthy/0.5)+" weeks at 0.5 kg":"in range"}</div></div>
+  ${waistStat()}`;
+}
+
+function waistStat(){
+  const ws=data.filter(r=>r.waist).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!ws.length) return `<div class="stat"><div class="k">Waist</div>
+    <div class="v" style="font-size:19px;color:#68727C">\u2014</div>
+    <div class="s">target under ${WAIST_TARGET} cm</div></div>`;
+  const last=ws[ws.length-1], r=whtr(last.waist), togo=+(last.waist-WAIST_TARGET).toFixed(1);
+  return `<div class="stat"><div class="k">Waist</div>
+    <div class="v">${last.waist.toFixed(1)}<span style="font-size:14px"> cm</span></div>
+    <div class="s">${waistBand(last.waist)} \u00b7 ratio ${r.toFixed(2)}</div></div>
+  <div class="stat"><div class="k">To ${WAIST_TARGET} cm</div>
+    <div class="v">${togo>0?togo.toFixed(1):"0"}<span style="font-size:14px"> cm</span></div>
+    <div class="s">${togo>0?"half your height":"in range"}</div></div>`;
+}
+
+function drawWaist(){
+  const box=document.getElementById("chart2");
+  const ws=data.filter(r=>r.waist).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!ws.length){box.innerHTML='<p class="empty">No waist readings yet. Add one above \u2014 for visceral fat it tells you more than the scale does.</p>';return;}
+  const W=880,Ht=250,mL=48,mR=52,mT=16,mB=34,iw=W-mL-mR,ih=Ht-mT-mB;
+  const dates=[...new Set(ws.map(r=>r.date))].sort();
+  const x=d=>dates.length<2?mL+iw/2:mL+(dates.indexOf(d)/(dates.length-1))*iw;
+  const vals=ws.map(r=>r.waist).concat([WAIST_TARGET]);
+  let lo=Math.min(...vals)-3, hi=Math.max(...vals)+3;
+  const y=v=>mT+ih-((v-lo)/(hi-lo))*ih;
+  let grid="",ticks="";
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4, yy=y(v);
+    grid+=`<line class="gridline" x1="${mL}" y1="${yy}" x2="${mL+iw}" y2="${yy}"/>`;
+    ticks+=`<text class="axis" x="${mL-8}" y="${yy+3.5}" text-anchor="end">${v.toFixed(0)}</text>`+
+           `<text class="axis" x="${mL+iw+8}" y="${yy+3.5}" fill="#6A4C93">${whtr(v).toFixed(2)}</text>`;
+  }
+  const target=`<line x1="${mL}" y1="${y(WAIST_TARGET)}" x2="${mL+iw}" y2="${y(WAIST_TARGET)}"
+    stroke="#68727C" stroke-width="2" stroke-dasharray="7 5"/>
+    <text class="axis" x="${mL+6}" y="${y(WAIST_TARGET)-7}" fill="#68727C">TARGET ${WAIST_TARGET} CM \u00b7 HALF YOUR HEIGHT</text>`;
+  const line=ws.length>1?`<polyline fill="none" stroke="#6A4C93" stroke-width="2.5" stroke-linejoin="round"
+    points="${ws.map(r=>x(r.date)+","+y(r.waist)).join(" ")}"/>`:"";
+  const dots=ws.map(r=>`<circle class="dot" cx="${x(r.date)}" cy="${y(r.waist)}" r="4.5" fill="#6A4C93"><title>${fmtD(r.date)} \u00b7 ${r.waist} cm \u00b7 ratio ${whtr(r.waist).toFixed(2)}</title></circle>`).join("");
+  const xlab=dates.map(d=>`<text class="axis" x="${x(d)}" y="${mT+ih+18}" text-anchor="middle">${fmtD(d)}</text>`).join("");
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Waist measurement over time">
+    ${grid}${ticks}${xlab}${target}${line}${dots}
+    <text class="axis" x="${mL}" y="${mT-4}" font-size="9">CM</text>
+    <text class="axis" x="${mL+iw}" y="${mT-4}" font-size="9" fill="#6A4C93" text-anchor="end">RATIO</text></svg>`;
 }
 
 function drawChart(){
@@ -211,11 +279,12 @@ function drawLog(){
   const el=document.getElementById("log");
   if(!data.length){el.innerHTML='<p class="empty">Nothing logged yet. Add your first reading above.</p>';return;}
   const rows=[...data].sort((a,b)=>b.date.localeCompare(a.date));
-  el.innerHTML=`<table><thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Note</th><th></th></tr></thead><tbody>
+  el.innerHTML=`<table><thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Waist</th><th>Note</th><th></th></tr></thead><tbody>
   ${rows.map(r=>{const i=data.indexOf(r);return `<tr class="${r.flag?'flagrow':''}">
     <td class="num">${fmtD(r.date)}</td>
     <td class="num">${r.kg.toFixed(1)} kg</td>
     <td class="num">${bmi(r.kg).toFixed(1)}</td>
+    <td class="num">${r.waist?r.waist.toFixed(1)+" cm":"\u2014"}</td>
     <td>${r.flag?'<span class="pill">not fasted</span>':band(bmi(r.kg))}</td>
     <td style="text-align:right"><button class="del" data-i="${i}" aria-label="Delete reading">×</button></td>
   </tr>`}).join("")}</tbody></table>`;
@@ -223,14 +292,18 @@ function drawLog(){
     data.splice(+b.dataset.i,1);save();render();});
 }
 
-function render(){drawStats();drawChart();drawLog();}
+function render(){drawStats();drawChart();drawWaist();drawLog();}
 
 document.getElementById("f").onsubmit=e=>{
   e.preventDefault();
   const d=document.getElementById("d").value, w=parseFloat(document.getElementById("w").value);
   if(!d||!w)return;
-  data.push({date:d,kg:w,flag:document.getElementById("flag").checked});
-  document.getElementById("w").value="";document.getElementById("flag").checked=false;
+  const waRaw=document.getElementById("wa").value;
+  const entry={date:d,kg:w,flag:document.getElementById("flag").checked};
+  if(waRaw) entry.waist=parseFloat(waRaw);
+  data.push(entry);
+  document.getElementById("w").value="";document.getElementById("wa").value="";
+  document.getElementById("flag").checked=false;
   save();render();
 };
 document.getElementById("d").value=new Date().toISOString().slice(0,10);
