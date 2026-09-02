@@ -1,313 +1,520 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Weight &amp; BMI · tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16232B">
+<title>Weight &amp; waist</title>
 <style>
-:root{
-  --paper:#E4E7E1;--card:#FBFBF9;--ink:#16202A;--line:#00693E;--line-soft:#B9D3C4;
-  --amber:#B8791F;--muted:#68727C;--rule:#CBD1CA;
-  --shadow:0 1px 2px rgba(22,32,42,.06),0 8px 24px rgba(22,32,42,.05);
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);
-  font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;line-height:1.55}
-.wrap{max-width:940px;margin:0 auto;padding:28px 20px 70px}
-.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
-  border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
-h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(28px,5.5vw,44px);
-  letter-spacing:-.03em;line-height:.95;margin:0;text-transform:uppercase}
-h1 em{font-style:normal;color:var(--line)}
-.meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-align:right}
-.meta b{color:var(--ink);font-weight:600}
+  :root{
+    --ink:#16232B;
+    --ink-soft:#4A5C64;
+    --paper:#EEF1F0;
+    --card:#FBFCFB;
+    --rule:#C9D2D0;
+    --weight:#2E5E6E;
+    --waist:#8A5A2B;
+    --good:#3B6E4B;
+    --flag:#8C6D1F;
+    --shadow:0 1px 0 rgba(22,35,43,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+    padding:0 0 4rem;
+  }
+  .wrap{max-width:38rem;margin:0 auto;padding:0 1.1rem}
+  .num{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-variant-numeric:oldstyle-nums}
 
-.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px}
-.stat{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;
-  box-shadow:var(--shadow)}
-.stat .k{font-family:'Archivo',sans-serif;font-size:10.5px;text-transform:uppercase;
-  letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
-.stat .v{font-family:'IBM Plex Mono',monospace;font-size:25px;font-weight:600;line-height:1.1}
-.stat .s{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
-.down{color:var(--line)}.up{color:var(--amber)}
+  header{padding:2.2rem 0 1.4rem}
+  h1{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-size:1.9rem;line-height:1.15;font-weight:400;
+    letter-spacing:-.01em;margin:0 0 .5rem;
+  }
+  .meta{color:var(--ink-soft);font-size:.85rem;margin:0}
 
-.panel{background:var(--card);border:1px solid var(--rule);border-radius:3px;
-  padding:18px;box-shadow:var(--shadow);margin-bottom:20px}
-.section-head{font-family:'Archivo',sans-serif;font-weight:800;font-size:12.5px;
-  text-transform:uppercase;letter-spacing:.1em;margin:0 0 14px;padding-bottom:7px;
-  border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.section-head .legend{font-family:'IBM Plex Mono',monospace;font-size:10.5px;
-  font-weight:400;letter-spacing:.02em;text-transform:none;color:var(--muted);display:flex;gap:14px}
-.swatch{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px}
-svg{display:block;width:100%;height:auto;overflow:visible}
-.gridline{stroke:var(--rule);stroke-width:1}
-.axis{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--muted)}
-.dot{cursor:pointer}
-.dot:hover{r:6}
+  /* ---- hero: the gap, drawn as a tape ---- */
+  .gap{
+    background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:1.3rem 1.2rem 1.1rem;box-shadow:var(--shadow);margin-bottom:1.6rem;
+  }
+  .gap-fig{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+  .gap-fig strong{font-family:Georgia,serif;font-size:2.6rem;font-weight:400;line-height:1}
+  .gap-fig span{color:var(--ink-soft);font-size:.95rem}
+  .gap-sub{color:var(--ink-soft);font-size:.85rem;margin:.55rem 0 0}
+  .tape{margin-top:1.1rem}
+  .tape svg{display:block;width:100%;height:46px}
 
-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-label{display:flex;flex-direction:column;gap:5px;font-family:'Archivo',sans-serif;
-  font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
-input[type=date],input[type=number]{font-family:'IBM Plex Mono',monospace;font-size:15px;
-  padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:#fff;color:var(--ink)}
-input[type=number]{width:110px}
-.chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;font-size:13px;
-  font-family:'IBM Plex Sans',sans-serif;letter-spacing:0;color:var(--ink);padding-bottom:9px}
-button.add{font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;
-  letter-spacing:.09em;background:var(--line);color:#fff;border:0;border-radius:3px;
-  padding:11px 20px;cursor:pointer}
-button.add:hover{background:#005633}
-button:focus-visible,input:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+  h2{
+    font-family:Georgia,serif;font-weight:400;font-size:1.15rem;
+    margin:2.2rem 0 .2rem;
+  }
+  .sub{color:var(--ink-soft);font-size:.85rem;margin:0 0 .8rem}
 
-table{width:100%;border-collapse:collapse;font-size:14.5px}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule)}
-th{font-family:'Archivo',sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-td.num{font-family:'IBM Plex Mono',monospace}
-tr:last-child td{border-bottom:0}
-.flagrow td{color:var(--muted)}
-.pill{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
-  letter-spacing:.06em;background:#EDE4D2;color:var(--amber);padding:2px 7px;border-radius:2px}
-.del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:0 4px}
-.del:hover{color:#B03030}
-.note{background:#DFE6DE;border-left:3px solid var(--line);padding:12px 15px;font-size:14px;
-  line-height:1.6;margin:16px 0 0;border-radius:0 3px 3px 0}
-.empty{color:var(--muted);font-size:14px;padding:14px 0}
-@media (max-width:560px){.wrap{padding:20px 14px 50px}.meta{text-align:left}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .panel{
+    background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:1rem .8rem .8rem;box-shadow:var(--shadow);
+  }
+  .chart{width:100%;height:200px;display:block;overflow:visible}
+  .key{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);padding:.6rem .3rem 0}
+  .key i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-1px}
+  .empty{color:var(--ink-soft);font-size:.9rem;padding:2.4rem .8rem;text-align:center}
+
+  /* ---- form ---- */
+  .field{margin-bottom:.85rem}
+  label{display:block;font-size:.8rem;color:var(--ink-soft);margin-bottom:.25rem}
+  input[type=date],input[type=number]{
+    width:100%;padding:.65rem .7rem;font-size:1rem;font-family:inherit;
+    border:1px solid var(--rule);border-radius:3px;background:#fff;color:var(--ink);
+  }
+  input:focus-visible,button:focus-visible{outline:2px solid var(--weight);outline-offset:2px}
+  .row{display:flex;gap:.7rem}
+  .row .field{flex:1}
+  .check{display:flex;align-items:flex-start;gap:.55rem;font-size:.9rem;margin:.2rem 0 1rem}
+  .check input{margin-top:.25rem;width:1.05rem;height:1.05rem;flex:0 0 auto}
+  .check span{color:var(--ink-soft)}
+  button{
+    font-family:inherit;font-size:1rem;padding:.7rem 1.1rem;cursor:pointer;
+    border-radius:3px;border:1px solid var(--ink);background:var(--ink);color:#fff;
+  }
+  button.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+  button:active{transform:translateY(1px)}
+  .saved{font-size:.85rem;color:var(--good);margin:.7rem 0 0;min-height:1.2em}
+  .saved.bad{color:#8B2F2F}
+
+  /* ---- list ---- */
+  ol{list-style:none;margin:0;padding:0}
+  li{
+    display:flex;align-items:baseline;gap:.7rem;
+    padding:.7rem .2rem;border-bottom:1px solid var(--rule);font-size:.95rem;
+  }
+  li:last-child{border-bottom:0}
+  li .d{color:var(--ink-soft);font-size:.82rem;width:5.6rem;flex:0 0 auto}
+  li .w{font-family:Georgia,serif;width:4.2rem;flex:0 0 auto}
+  li .x{font-family:Georgia,serif;color:var(--waist);width:4rem;flex:0 0 auto}
+  li .tag{color:var(--flag);font-size:.75rem}
+  li .del{margin-left:auto;background:none;border:0;color:var(--ink-soft);font-size:.85rem;padding:.2rem .4rem;text-decoration:underline}
+
+  .notes{margin-top:2.6rem;font-size:.92rem;color:var(--ink-soft)}
+  .notes p{margin:0 0 1rem;max-width:34rem}
+  .notes strong{color:var(--ink);font-weight:600}
+  .tools{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.4rem}
+  .tools button{font-size:.85rem;padding:.5rem .8rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<div class="mast">
-  <h1>Weight<br><em>&amp; BMI</em></h1>
-  <div class="meta">HEIGHT <b>172 cm</b><br>START <b>81.5 kg</b> · 17 AUG 2026<br id="metabreak">TARGET RANGE <b>18.5–24.9</b> BMI</div>
-</div>
+  <header>
+    <h1>Weight &amp; waist</h1>
+    <p class="meta">172&nbsp;cm · started 81.5&nbsp;kg on 17 August 2026 · target BMI 25 by Christmas</p>
+  </header>
 
-<div class="stats" id="stats"></div>
+  <section class="gap" id="gap">
+    <div class="gap-fig"><strong id="gapKg">—</strong><span id="gapWord">to go</span></div>
+    <p class="gap-sub" id="gapSub"></p>
+    <div class="tape"><svg id="tape" viewBox="0 0 600 46" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+  </section>
 
-<div class="panel">
-  <div class="section-head">The trend
-    <span class="legend">
-      <span><span class="swatch" style="background:#00693E"></span>Weight kg</span>
-      <span><span class="swatch" style="background:#B8791F"></span>BMI</span>
-    </span>
+  <h2>The trend</h2>
+  <p class="sub">Weight in kilograms. The dotted line is 73.9&nbsp;kg — BMI 25 at your height.</p>
+  <div class="panel">
+    <svg class="chart" id="chartW" viewBox="0 0 600 200" preserveAspectRatio="none"></svg>
+    <div class="key">
+      <span><i style="background:var(--weight)"></i>Fasted reading</span>
+      <span><i style="background:#fff;border:2px solid var(--weight)"></i>Not fasted — excluded from the trend</span>
+    </div>
   </div>
-  <div id="chart"></div>
-</div>
 
-<div class="panel">
-  <div class="section-head">Waist
-    <span class="legend">
-      <span><span class="swatch" style="background:#6A4C93"></span>Waist cm</span>
-      <span><span class="swatch" style="background:#68727C"></span>Target 86 cm</span>
-    </span>
+  <h2>Waist</h2>
+  <p class="sub">Centimetres. 94 is the raised-risk line for men; 86 is half your height, the longer-run destination.</p>
+  <div class="panel">
+    <svg class="chart" id="chartX" viewBox="0 0 600 200" preserveAspectRatio="none"></svg>
   </div>
-  <div id="chart2"></div>
-  <div class="note" style="margin-top:14px"><b>Measure it the same way each time</b> — standing, first thing, before food. Tape at the midpoint between your lowest rib and the top of your hip bone, snug but not compressing. Breathe out normally and read it then; don't hold it in. Once a week is plenty.</div>
+
+  <h2>Add a reading</h2>
+  <p class="sub">Standing, first thing, before food. Tape at the midpoint between your lowest rib and the top of your hip bone, snug but not compressing. Breathe out normally and read it then. Once a week is plenty.</p>
+  <div class="panel">
+    <div class="field">
+      <label for="inDate">Date</label>
+      <input type="date" id="inDate">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="inW">Weight (kg)</label>
+        <input type="number" id="inW" step="0.1" min="30" max="250" inputmode="decimal" placeholder="81.9">
+      </div>
+      <div class="field">
+        <label for="inX">Waist (cm)</label>
+        <input type="number" id="inX" step="0.5" min="50" max="200" inputmode="decimal" placeholder="102">
+      </div>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="inNF">
+      <span>Not fasted, or clothed — keep it out of the trend maths</span>
+    </label>
+    <button type="button" id="btnAdd">Save reading</button>
+    <p class="saved" id="saved" role="status" aria-live="polite"></p>
+  </div>
+
+  <h2>Every reading</h2>
+  <div class="panel">
+    <ol id="list"></ol>
+  </div>
+
+  <div class="tools">
+    <button type="button" class="ghost" id="btnExport">Download a backup</button>
+    <button type="button" class="ghost" id="btnImport">Restore from a backup</button>
+    <input type="file" id="fileIn" accept="application/json,.json" hidden>
+  </div>
+
+  <div class="notes">
+    <h2>Reading this honestly</h2>
+    <p>Day-to-day movement of half a kilo either way is water, salt and gut contents, not fat. The line that matters is the one drawn over a fortnight.</p>
+    <p>Weigh the same way every time — morning, after the loo, before food, minimal clothing. Readings ticked as not fasted show as hollow dots and sit outside the trend, because clothes and a meal are worth well over a kilo and would otherwise look like real change.</p>
+    <p>BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. <strong>Waist is the better number.</strong> It tracks visceral fat, which is what you're actually trying to shift, and it moves more slowly but more honestly than the scale.</p>
+    <p>Roughly one centimetre of waist goes with each kilogram lost in this range. Eight kilograms takes you from 102 to about 94 — the working target. 86 needs closer to sixteen, so treat it as next year's line, not this one's.</p>
+    <p>Your readings live on this device only. <strong>Download a backup every few weeks</strong> — clearing your browser data would otherwise take the lot.</p>
+  </div>
+
 </div>
 
-<div class="panel">
-  <div class="section-head">Add a reading</div>
-  <form id="f">
-    <label>Date<input type="date" id="d" required></label>
-    <label>Weight (kg)<input type="number" id="w" step="0.1" min="30" max="250" placeholder="81.5" required></label>
-    <label>Waist (cm)<input type="number" id="wa" step="0.5" min="50" max="200" placeholder="optional"></label>
-    <label class="chk"><input type="checkbox" id="flag"> Not fasted / clothed</label>
-    <button class="add" type="submit">Add reading</button>
-  </form>
-  <div class="note"><b>Weigh the same way every time</b> — morning, after the loo, before food, minimal clothing. Readings ticked as "not fasted" show as hollow dots and are left out of the trend maths, because clothes and a meal are worth well over a kilo and would otherwise look like real change.</div>
-</div>
-
-<div class="panel">
-  <div class="section-head">Every reading</div>
-  <div id="log"></div>
-</div>
-
-<div class="panel">
-  <div class="section-head">Reading this honestly</div>
-  <p style="margin:0 0 12px;font-size:14.5px">The two lines move in lockstep — BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. It's here because clinicians use it, not because it adds information.</p>
-  <p style="margin:0 0 12px;font-size:14.5px">BMI also can't distinguish muscle from fat, and takes no account of where fat sits. Waist measurement is the better single number for the visceral fat you're targeting — worth taking once a week at the navel, same time of day.</p>
-  <p style="margin:0 0 12px;font-size:14.5px">Day-to-day movement of half a kilo either way is water, salt and gut contents, not fat. The line that matters is the one drawn over a fortnight.</p>
-  <p style="margin:0;font-size:14.5px"><b>On the waist target:</b> keeping your waist under half your height &mdash; 86 cm at 172 cm &mdash; is the threshold with the best evidence behind it, and it maps onto visceral fat far better than BMI does. The NHS uses a more forgiving line for men: under 94 cm low risk, 94&ndash;102 increased, over 102 high. Weekly is often enough; it moves more slowly than the scale but it moves more honestly.</p>
-</div>
-
-</div>
 <script>
-const H=1.72, H2=H*H;
-const SEED=[
- {date:"2026-08-17",kg:81.5,flag:false},
- {date:"2026-08-18",kg:81.5,flag:false},
- {date:"2026-08-18",kg:82.9,flag:true},
- {date:"2026-08-19",kg:80.7,flag:false},
- {date:"2026-08-20",kg:82.5,flag:false}
-];
-let data=[];
+(function(){
+  "use strict";
 
-async function save(){try{await window.storage.set("wbmi",JSON.stringify(data));}catch(e){}}
-async function load(){
-  try{const r=await window.storage.get("wbmi");
-    if(r&&r.value){data=JSON.parse(r.value);return;}}catch(e){}
-  data=SEED.slice();
-}
-const bmi=kg=>kg/H2;
-const fmtD=s=>{const d=new Date(s+"T12:00");return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});};
-const clean=()=>data.filter(r=>!r.flag).sort((a,b)=>a.date.localeCompare(b.date));
+  var KEY = "ww-readings-v2";
+  var LEGACY = ["weightTracker","weight-readings","ww-readings","bmiTracker","readings","weightAndBMI"];
+  var H2 = 1.72 * 1.72;          /* 2.9584 */
+  var TARGET_KG = 73.9;          /* BMI 25 */
+  var TARGET_DATE = "2026-12-25";
+  var WAIST_NEAR = 94, WAIST_FAR = 86;
 
-const H_CM=172, WAIST_TARGET=+(H_CM*0.5).toFixed(0);
-const whtr=w=>w/H_CM;
-function waistBand(w){
-  const r=whtr(w);
-  if(r<0.4)return"Below range";
-  if(r<0.5)return"Healthy";
-  if(r<0.6)return"Increased risk";
-  return"High risk";
-}
-function band(b){
-  if(b<18.5)return"Underweight";
-  if(b<25)return"Healthy";
-  if(b<30)return"Overweight";
-  return"Obese";
-}
-
-function drawStats(){
-  const c=clean(),el=document.getElementById("stats");
-  if(!c.length){el.innerHTML="";return;}
-  const first=c[0],last=c[c.length-1];
-  const dk=last.kg-first.kg, b=bmi(last.kg);
-  const toHealthy=+(last.kg-24.9*H2).toFixed(1);
-  el.innerHTML=`
-  <div class="stat"><div class="k">Latest weight</div>
-    <div class="v">${last.kg.toFixed(1)}<span style="font-size:14px"> kg</span></div>
-    <div class="s">${fmtD(last.date)}</div></div>
-  <div class="stat"><div class="k">Latest BMI</div>
-    <div class="v">${b.toFixed(1)}</div><div class="s">${band(b)}</div></div>
-  <div class="stat"><div class="k">Change</div>
-    <div class="v ${dk<0?'down':dk>0?'up':''}">${dk>0?"+":""}${dk.toFixed(1)}<span style="font-size:14px"> kg</span></div>
-    <div class="s">since ${fmtD(first.date)}</div></div>
-  <div class="stat"><div class="k">To BMI 24.9</div>
-    <div class="v">${toHealthy>0?toHealthy.toFixed(1):"0"}<span style="font-size:14px"> kg</span></div>
-    <div class="s">${toHealthy>0?"~"+Math.ceil(toHealthy/0.5)+" weeks at 0.5 kg":"in range"}</div></div>
-  ${waistStat()}`;
-}
-
-function waistStat(){
-  const ws=data.filter(r=>r.waist).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!ws.length) return `<div class="stat"><div class="k">Waist</div>
-    <div class="v" style="font-size:19px;color:#68727C">\u2014</div>
-    <div class="s">target under ${WAIST_TARGET} cm</div></div>`;
-  const last=ws[ws.length-1], r=whtr(last.waist), togo=+(last.waist-WAIST_TARGET).toFixed(1);
-  return `<div class="stat"><div class="k">Waist</div>
-    <div class="v">${last.waist.toFixed(1)}<span style="font-size:14px"> cm</span></div>
-    <div class="s">${waistBand(last.waist)} \u00b7 ratio ${r.toFixed(2)}</div></div>
-  <div class="stat"><div class="k">To ${WAIST_TARGET} cm</div>
-    <div class="v">${togo>0?togo.toFixed(1):"0"}<span style="font-size:14px"> cm</span></div>
-    <div class="s">${togo>0?"half your height":"in range"}</div></div>`;
-}
-
-function drawWaist(){
-  const box=document.getElementById("chart2");
-  const ws=data.filter(r=>r.waist).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!ws.length){box.innerHTML='<p class="empty">No waist readings yet. Add one above \u2014 for visceral fat it tells you more than the scale does.</p>';return;}
-  const W=880,Ht=250,mL=48,mR=52,mT=16,mB=34,iw=W-mL-mR,ih=Ht-mT-mB;
-  const dates=[...new Set(ws.map(r=>r.date))].sort();
-  const x=d=>dates.length<2?mL+iw/2:mL+(dates.indexOf(d)/(dates.length-1))*iw;
-  const vals=ws.map(r=>r.waist).concat([WAIST_TARGET]);
-  let lo=Math.min(...vals)-3, hi=Math.max(...vals)+3;
-  const y=v=>mT+ih-((v-lo)/(hi-lo))*ih;
-  let grid="",ticks="";
-  for(let i=0;i<=4;i++){
-    const v=lo+(hi-lo)*i/4, yy=y(v);
-    grid+=`<line class="gridline" x1="${mL}" y1="${yy}" x2="${mL+iw}" y2="${yy}"/>`;
-    ticks+=`<text class="axis" x="${mL-8}" y="${yy+3.5}" text-anchor="end">${v.toFixed(0)}</text>`+
-           `<text class="axis" x="${mL+iw+8}" y="${yy+3.5}" fill="#6A4C93">${whtr(v).toFixed(2)}</text>`;
+  /* ---------------- storage ---------------- */
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
+    }catch(e){}
+    return null;
   }
-  const target=`<line x1="${mL}" y1="${y(WAIST_TARGET)}" x2="${mL+iw}" y2="${y(WAIST_TARGET)}"
-    stroke="#68727C" stroke-width="2" stroke-dasharray="7 5"/>
-    <text class="axis" x="${mL+6}" y="${y(WAIST_TARGET)-7}" fill="#68727C">TARGET ${WAIST_TARGET} CM \u00b7 HALF YOUR HEIGHT</text>`;
-  const line=ws.length>1?`<polyline fill="none" stroke="#6A4C93" stroke-width="2.5" stroke-linejoin="round"
-    points="${ws.map(r=>x(r.date)+","+y(r.waist)).join(" ")}"/>`:"";
-  const dots=ws.map(r=>`<circle class="dot" cx="${x(r.date)}" cy="${y(r.waist)}" r="4.5" fill="#6A4C93"><title>${fmtD(r.date)} \u00b7 ${r.waist} cm \u00b7 ratio ${whtr(r.waist).toFixed(2)}</title></circle>`).join("");
-  const xlab=dates.map(d=>`<text class="axis" x="${x(d)}" y="${mT+ih+18}" text-anchor="middle">${fmtD(d)}</text>`).join("");
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Waist measurement over time">
-    ${grid}${ticks}${xlab}${target}${line}${dots}
-    <text class="axis" x="${mL}" y="${mT-4}" font-size="9">CM</text>
-    <text class="axis" x="${mL+iw}" y="${mT-4}" font-size="9" fill="#6A4C93" text-anchor="end">RATIO</text></svg>`;
-}
-
-function drawChart(){
-  const all=[...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const box=document.getElementById("chart");
-  if(all.length<1){box.innerHTML='<p class="empty">No readings yet.</p>';return;}
-  const W=880,Ht=300,mL=48,mR=52,mT=16,mB=34;
-  const iw=W-mL-mR, ih=Ht-mT-mB;
-  const dates=[...new Set(all.map(r=>r.date))].sort();
-  const x=d=>dates.length<2?mL+iw/2:mL+(dates.indexOf(d)/(dates.length-1))*iw;
-  const ks=all.map(r=>r.kg);
-  let lo=Math.min(...ks)-1.2, hi=Math.max(...ks)+1.2;
-  const y=k=>mT+ih-((k-lo)/(hi-lo))*ih;
-
-  let ticks="",grid="";
-  for(let i=0;i<=4;i++){
-    const k=lo+(hi-lo)*i/4, yy=y(k);
-    grid+=`<line class="gridline" x1="${mL}" y1="${yy}" x2="${mL+iw}" y2="${yy}"/>`;
-    ticks+=`<text class="axis" x="${mL-8}" y="${yy+3.5}" text-anchor="end">${k.toFixed(1)}</text>`+
-           `<text class="axis" x="${mL+iw+8}" y="${yy+3.5}" fill="#B8791F">${bmi(k).toFixed(1)}</text>`;
+  function save(list){
+    localStorage.setItem(KEY, JSON.stringify(list));   /* throws on failure — caller catches */
+    return true;
   }
-  const xlab=dates.map(d=>`<text class="axis" x="${x(d)}" y="${mT+ih+18}" text-anchor="middle">${fmtD(d)}</text>`).join("");
 
-  const c=clean();
-  const path=c.length>1?`<polyline fill="none" stroke="#00693E" stroke-width="2.5"
-     stroke-linejoin="round" points="${c.map(r=>x(r.date)+","+y(r.kg)).join(" ")}"/>`:"";
-  const bpath=c.length>1?`<polyline fill="none" stroke="#B8791F" stroke-width="2" stroke-dasharray="5 4"
-     points="${c.map(r=>x(r.date)+","+y(r.kg)).join(" ")}" opacity=".55"/>`:"";
-  const dots=all.map(r=>r.flag
-    ?`<circle class="dot" cx="${x(r.date)}" cy="${y(r.kg)}" r="4.5" fill="#FBFBF9" stroke="#B8791F" stroke-width="2"><title>${fmtD(r.date)} · ${r.kg} kg · not fasted, excluded</title></circle>`
-    :`<circle class="dot" cx="${x(r.date)}" cy="${y(r.kg)}" r="4.5" fill="#00693E"><title>${fmtD(r.date)} · ${r.kg} kg · BMI ${bmi(r.kg).toFixed(1)}</title></circle>`).join("");
+  /* Rescue: if the new key is empty, look for readings written under an older key. */
+  function rescue(){
+    var found = [];
+    var keys = [];
+    try{ for(var i=0;i<localStorage.length;i++) keys.push(localStorage.key(i)); }catch(e){ return found; }
+    keys.forEach(function(k){
+      if(k === KEY) return;
+      var v;
+      try{ v = JSON.parse(localStorage.getItem(k)); }catch(e){ return; }
+      var arr = Array.isArray(v) ? v : (v && Array.isArray(v.readings) ? v.readings : null);
+      if(!arr) return;
+      arr.forEach(function(r){
+        if(!r || typeof r !== "object") return;
+        var w = r.weight != null ? r.weight : (r.kg != null ? r.kg : r.w);
+        var x = r.waist  != null ? r.waist  : (r.cm != null ? r.cm : r.x);
+        var d = r.date || r.d || r.when;
+        if(d && (w != null || x != null)){
+          found.push({ date:String(d).slice(0,10),
+                       weight: w==null?null:Number(w),
+                       waist:  x==null?null:Number(x),
+                       nf: !!(r.nf || r.notFasted || r.clothed) });
+        }
+      });
+    });
+    return found;
+  }
 
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Weight and BMI over time">
-    ${grid}${ticks}${xlab}${bpath}${path}${dots}
-    <text class="axis" x="${mL}" y="${mT-4}" font-size="9">KG</text>
-    <text class="axis" x="${mL+iw}" y="${mT-4}" font-size="9" fill="#B8791F" text-anchor="end">BMI</text>
-  </svg>`;
-}
+  var SEED = [
+    { date:"2026-08-17", weight:81.5, waist:103, nf:false },
+    { date:"2026-09-01", weight:81.9, waist:102, nf:false }
+  ];
 
-function drawLog(){
-  const el=document.getElementById("log");
-  if(!data.length){el.innerHTML='<p class="empty">Nothing logged yet. Add your first reading above.</p>';return;}
-  const rows=[...data].sort((a,b)=>b.date.localeCompare(a.date));
-  el.innerHTML=`<table><thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Waist</th><th>Note</th><th></th></tr></thead><tbody>
-  ${rows.map(r=>{const i=data.indexOf(r);return `<tr class="${r.flag?'flagrow':''}">
-    <td class="num">${fmtD(r.date)}</td>
-    <td class="num">${r.kg.toFixed(1)} kg</td>
-    <td class="num">${bmi(r.kg).toFixed(1)}</td>
-    <td class="num">${r.waist?r.waist.toFixed(1)+" cm":"\u2014"}</td>
-    <td>${r.flag?'<span class="pill">not fasted</span>':band(bmi(r.kg))}</td>
-    <td style="text-align:right"><button class="del" data-i="${i}" aria-label="Delete reading">×</button></td>
-  </tr>`}).join("")}</tbody></table>`;
-  el.querySelectorAll(".del").forEach(b=>b.onclick=()=>{
-    data.splice(+b.dataset.i,1);save();render();});
-}
+  var data = load();
+  var firstRun = false;
+  if(!data){
+    firstRun = true;
+    var r = rescue();
+    data = r.length ? r : SEED.slice();
+    try{ save(data); }catch(e){}
+  }
 
-function render(){drawStats();drawChart();drawWaist();drawLog();}
+  function sorted(){ return data.slice().sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }); }
+  function trendPts(field){
+    return sorted().filter(function(r){ return !r.nf && r[field] != null && isFinite(r[field]); });
+  }
+  function latest(field){
+    var t = trendPts(field);
+    return t.length ? t[t.length-1] : null;
+  }
 
-document.getElementById("f").onsubmit=e=>{
-  e.preventDefault();
-  const d=document.getElementById("d").value, w=parseFloat(document.getElementById("w").value);
-  if(!d||!w)return;
-  const waRaw=document.getElementById("wa").value;
-  const entry={date:d,kg:w,flag:document.getElementById("flag").checked};
-  if(waRaw) entry.waist=parseFloat(waRaw);
-  data.push(entry);
-  document.getElementById("w").value="";document.getElementById("wa").value="";
-  document.getElementById("flag").checked=false;
-  save();render();
-};
-document.getElementById("d").value=new Date().toISOString().slice(0,10);
-load().then(render);
+  /* ---------------- hero ---------------- */
+  function daysTo(iso){
+    var a = new Date(); a.setHours(0,0,0,0);
+    var b = new Date(iso + "T00:00:00");
+    return Math.round((b - a) / 86400000);
+  }
+  function renderGap(){
+    var lw = latest("weight");
+    var kgEl = document.getElementById("gapKg");
+    var wdEl = document.getElementById("gapWord");
+    var sbEl = document.getElementById("gapSub");
+
+    if(!lw){ kgEl.textContent = "—"; wdEl.textContent = "no readings yet"; sbEl.textContent = ""; drawTape(null); return; }
+
+    var gap = lw.weight - TARGET_KG;
+    var weeks = Math.max(daysTo(TARGET_DATE) / 7, 0);
+    var bmi = lw.weight / H2;
+
+    if(gap <= 0){
+      kgEl.textContent = "Done";
+      wdEl.textContent = "BMI " + bmi.toFixed(1);
+      sbEl.textContent = "You're at or under 73.9 kg. Holding it is the next job.";
+    }else{
+      kgEl.textContent = gap.toFixed(1) + " kg";
+      wdEl.textContent = "to BMI 25";
+      var rate = weeks > 0 ? gap / weeks : 0;
+      sbEl.textContent = "Now " + lw.weight.toFixed(1) + " kg, BMI " + bmi.toFixed(1) + ". "
+        + Math.round(weeks) + " weeks to Christmas — that's " + rate.toFixed(2) + " kg a week from here.";
+    }
+    drawTape(lw.weight);
+  }
+
+  /* A tape measure: start on the left, target on the right, you somewhere between. */
+  function drawTape(kg){
+    var svg = document.getElementById("tape");
+    var W = 600, start = 81.9, end = TARGET_KG;
+    var s = "";
+    s += '<rect x="0" y="14" width="600" height="18" fill="#E2E7E5"/>';
+    if(kg != null){
+      var frac = (start - kg) / (start - end);
+      frac = Math.max(0, Math.min(1, frac));
+      s += '<rect x="0" y="14" width="' + (frac*W).toFixed(1) + '" height="18" fill="var(--weight)"/>';
+      s += '<line x1="' + (frac*W).toFixed(1) + '" y1="6" x2="' + (frac*W).toFixed(1) + '" y2="40" stroke="var(--ink)" stroke-width="2"/>';
+    }
+    for(var i=0;i<=20;i++){
+      var x = i*(W/20);
+      var tall = (i%5===0);
+      s += '<line x1="'+x+'" y1="14" x2="'+x+'" y2="'+(tall?32:24)+'" stroke="#FBFCFB" stroke-width="1"/>';
+    }
+    svg.innerHTML = s;
+  }
+
+  /* ---------------- charts ---------------- */
+  function drawChart(id, field, colour, lines){
+    var svg = document.getElementById(id);
+    var all = sorted().filter(function(r){ return r[field] != null && isFinite(r[field]); });
+    if(all.length === 0){
+      svg.innerHTML = '<text x="300" y="100" text-anchor="middle" fill="#4A5C64" font-size="14" font-family="system-ui">Add a reading to start the line</text>';
+      return;
+    }
+
+    var W = 600, H = 200, PL = 42, PR = 12, PT = 14, PB = 26;
+    var vals = all.map(function(r){ return r[field]; });
+    lines.forEach(function(l){ vals.push(l.at); });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var pad = Math.max((hi - lo) * 0.15, 0.6);
+    lo -= pad; hi += pad;
+
+    var t0 = new Date(all[0].date).getTime();
+    var t1 = new Date(all[all.length-1].date).getTime();
+    var tEnd = new Date(TARGET_DATE).getTime();
+    if(tEnd > t1) t1 = tEnd;
+    if(t1 === t0) t1 = t0 + 86400000;
+
+    function X(iso){ return PL + (new Date(iso).getTime() - t0) / (t1 - t0) * (W - PL - PR); }
+    function Y(v){ return PT + (hi - v) / (hi - lo) * (H - PT - PB); }
+
+    var s = "";
+
+    /* target lines */
+    lines.forEach(function(l){
+      var y = Y(l.at).toFixed(1);
+      s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+l.colour+'" stroke-width="1" stroke-dasharray="4 4" opacity="0.75"/>';
+      s += '<text x="'+(W-PR)+'" y="'+(y-5)+'" text-anchor="end" font-size="11" fill="'+l.colour+'" font-family="system-ui">'+l.label+'</text>';
+    });
+
+    /* axis */
+    [hi, (hi+lo)/2, lo].forEach(function(v){
+      s += '<text x="'+(PL-8)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#4A5C64" font-family="Georgia,serif">'+v.toFixed(1)+'</text>';
+    });
+
+    /* trend line — fasted readings only */
+    var tp = all.filter(function(r){ return !r.nf; });
+    if(tp.length > 1){
+      var d = tp.map(function(r,i){ return (i?"L":"M") + X(r.date).toFixed(1) + " " + Y(r[field]).toFixed(1); }).join(" ");
+      s += '<path d="'+d+'" fill="none" stroke="'+colour+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    }
+
+    /* dots */
+    all.forEach(function(r){
+      var cx = X(r.date).toFixed(1), cy = Y(r[field]).toFixed(1);
+      if(r.nf) s += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#FBFCFB" stroke="'+colour+'" stroke-width="2"/>';
+      else     s += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="'+colour+'"/>';
+    });
+
+    /* first and last date labels */
+    s += '<text x="'+PL+'" y="'+(H-6)+'" font-size="11" fill="#4A5C64" font-family="system-ui">'+shortDate(all[0].date)+'</text>';
+    s += '<text x="'+(W-PR)+'" y="'+(H-6)+'" text-anchor="end" font-size="11" fill="#4A5C64" font-family="system-ui">25 Dec</text>';
+
+    svg.innerHTML = s;
+  }
+
+  function shortDate(iso){
+    var m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var d = new Date(iso + "T00:00:00");
+    return d.getDate() + " " + m[d.getMonth()];
+  }
+
+  /* ---------------- list ---------------- */
+  function renderList(){
+    var ol = document.getElementById("list");
+    var rows = sorted().reverse();
+    if(!rows.length){ ol.innerHTML = '<li style="border:0;color:#4A5C64">Nothing logged yet.</li>'; return; }
+    ol.innerHTML = rows.map(function(r){
+      return '<li>'
+        + '<span class="d">' + shortDate(r.date) + '</span>'
+        + '<span class="w">' + (r.weight != null ? r.weight.toFixed(1) + " kg" : "—") + '</span>'
+        + '<span class="x">' + (r.waist  != null ? r.waist.toFixed(0)  + " cm" : "—") + '</span>'
+        + (r.nf ? '<span class="tag">not fasted</span>' : '')
+        + '<button type="button" class="del" data-date="' + r.date + '">Remove</button>'
+        + '</li>';
+    }).join("");
+  }
+
+  function renderAll(){
+    renderGap();
+    drawChart("chartW","weight","var(--weight)",[{at:TARGET_KG,label:"73.9 — BMI 25",colour:"var(--good)"}]);
+    drawChart("chartX","waist","var(--waist)",[
+      {at:WAIST_NEAR,label:"94",colour:"var(--flag)"},
+      {at:WAIST_FAR, label:"86",colour:"var(--good)"}
+    ]);
+    renderList();
+  }
+
+  /* ---------------- events ---------------- */
+  function say(msg, bad){
+    var el = document.getElementById("saved");
+    el.textContent = msg;
+    el.className = bad ? "saved bad" : "saved";
+  }
+
+  var elD = document.getElementById("inDate"),
+      elW = document.getElementById("inW"),
+      elX = document.getElementById("inX"),
+      elN = document.getElementById("inNF");
+
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  elD.value = todayISO();
+
+  document.getElementById("btnAdd").addEventListener("click", function(){
+    var date = elD.value;
+    var w = elW.value === "" ? null : parseFloat(elW.value);
+    var x = elX.value === "" ? null : parseFloat(elX.value);
+
+    if(!date){ say("Pick a date first.", true); return; }
+    if(w == null && x == null){ say("Enter a weight, a waist, or both.", true); return; }
+    if(w != null && !isFinite(w)){ say("That weight isn't a number.", true); return; }
+    if(x != null && !isFinite(x)){ say("That waist isn't a number.", true); return; }
+
+    var entry = { date:date, weight:w, waist:x, nf:elN.checked };
+    var idx = data.findIndex(function(r){ return r.date === date; });
+    var replaced = idx >= 0;
+    if(replaced){
+      if(entry.weight == null) entry.weight = data[idx].weight;
+      if(entry.waist  == null) entry.waist  = data[idx].waist;
+      data[idx] = entry;
+    }else{
+      data.push(entry);
+    }
+
+    try{
+      save(data);
+    }catch(err){
+      data = load() || [];
+      renderAll();
+      say("Couldn't save — this browser is blocking storage. Private browsing does that.", true);
+      return;
+    }
+
+    /* Read it straight back. If it isn't there, the save silently failed. */
+    var check = load();
+    if(!check || !check.some(function(r){ return r.date === date; })){
+      say("Save didn't stick. Download a backup and tell Claude.", true);
+      return;
+    }
+    data = check;
+
+    elW.value = ""; elX.value = ""; elN.checked = false;
+    renderAll();
+    say((replaced ? "Updated " : "Saved ") + shortDate(date) + " at " + new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));
+  });
+
+  document.getElementById("list").addEventListener("click", function(e){
+    var b = e.target.closest(".del");
+    if(!b) return;
+    var d = b.getAttribute("data-date");
+    if(!confirm("Remove the reading from " + shortDate(d) + "?")) return;
+    data = data.filter(function(r){ return r.date !== d; });
+    try{ save(data); }catch(err){}
+    renderAll();
+    say("Removed " + shortDate(d));
+  });
+
+  document.getElementById("btnExport").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "weight-waist-" + todayISO() + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    say("Backup downloaded.");
+  });
+
+  document.getElementById("btnImport").addEventListener("click", function(){
+    document.getElementById("fileIn").click();
+  });
+  document.getElementById("fileIn").addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var fr = new FileReader();
+    fr.onload = function(){
+      try{
+        var v = JSON.parse(fr.result);
+        if(!Array.isArray(v)) throw new Error("shape");
+        var byDate = {};
+        data.concat(v).forEach(function(r){ if(r && r.date) byDate[r.date] = r; });
+        data = Object.keys(byDate).map(function(k){ return byDate[k]; });
+        save(data);
+        renderAll();
+        say("Restored — " + data.length + " readings, merged with what was here.");
+      }catch(err){
+        say("That file isn't a backup from this app.", true);
+      }
+    };
+    fr.readAsText(f);
+    e.target.value = "";
+  });
+
+  renderAll();
+  if(firstRun) say(data.length + " readings loaded.");
+})();
 </script>
 </body>
 </html>
