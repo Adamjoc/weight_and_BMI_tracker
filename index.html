@@ -108,6 +108,18 @@
   .tools{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.4rem}
   .tools button{font-size:.85rem;padding:.5rem .8rem}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  .alert{
+    background:#FDF3E3;border:1px solid #D9B872;border-left:4px solid var(--flag);
+    border-radius:3px;padding:.9rem 1rem;margin:0 0 1.4rem;font-size:.9rem;
+  }
+  .alert strong{display:block;margin-bottom:.25rem}
+  .alert.ok{background:#EDF4EE;border-color:#9CBCA4;border-left-color:var(--good)}
+  .linkbox{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;
+    word-break:break-all;background:var(--paper);border:1px solid var(--rule);
+    border-radius:3px;padding:.6rem;margin-top:.6rem;color:var(--ink-soft);
+  }
 </style>
 </head>
 <body>
@@ -117,6 +129,8 @@
     <h1>Weight &amp; waist</h1>
     <p class="meta">172&nbsp;cm · started 81.5&nbsp;kg on 17 August 2026 · target BMI 25 by Christmas</p>
   </header>
+
+  <div class="alert" id="alertBar" hidden></div>
 
   <section class="gap" id="gap">
     <div class="gap-fig"><strong id="gapKg">—</strong><span id="gapWord">to go</span></div>
@@ -173,6 +187,7 @@
   <div class="tools">
     <button type="button" class="ghost" id="btnExport">Download a backup</button>
     <button type="button" class="ghost" id="btnImport">Restore from a backup</button>
+    <button type="button" class="ghost" id="btnLink">Copy my data link</button>
     <input type="file" id="fileIn" accept="application/json,.json" hidden>
   </div>
 
@@ -182,7 +197,8 @@
     <p>Weigh the same way every time — morning, after the loo, before food, minimal clothing. Readings ticked as not fasted show as hollow dots and sit outside the trend, because clothes and a meal are worth well over a kilo and would otherwise look like real change.</p>
     <p>BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. <strong>Waist is the better number.</strong> It tracks visceral fat, which is what you're actually trying to shift, and it moves more slowly but more honestly than the scale.</p>
     <p>Roughly one centimetre of waist goes with each kilogram lost in this range. Eight kilograms takes you from 102 to about 94 — the working target. 86 needs closer to sixteen, so treat it as next year's line, not this one's.</p>
-    <p>Your readings live on this device only. <strong>Download a backup every few weeks</strong> — clearing your browser data would otherwise take the lot.</p>
+    <p>Your readings are now held in three places at once: this browser’s local storage, a database inside the browser, and the data link. If the browser clears one, the app rebuilds from the others.</p>
+    <p><strong>Do this once and it can never bite you again:</strong> tap <em>Copy my data link</em>, paste it into a note or an email to yourself, and keep it. That link contains every reading. Opening it on any device or any browser restores the lot. Take a fresh one every month or so.</p>
   </div>
 
 </div>
@@ -192,29 +208,145 @@
   "use strict";
 
   var KEY = "ww-readings-v2";
-  var LEGACY = ["weightTracker","weight-readings","ww-readings","bmiTracker","readings","weightAndBMI"];
+  var DBN = "ww-db", STORE = "readings";
   var H2 = 1.72 * 1.72;          /* 2.9584 */
   var TARGET_KG = 73.9;          /* BMI 25 */
   var TARGET_DATE = "2026-12-25";
   var WAIST_NEAR = 94, WAIST_FAR = 86;
 
-  /* ---------------- storage ---------------- */
-  function load(){
+  var SEED = [
+    { date:"2026-08-17", weight:81.5, waist:103, nf:false },
+    { date:"2026-09-01", weight:81.9, waist:102, nf:false }
+  ];
+
+  /* ============================================================
+     STORAGE — three independent layers.
+     1. localStorage   fast, but browsers evict it
+     2. IndexedDB      separate bucket, often survives a localStorage clear
+     3. the data link  lives outside the device entirely
+     Every save writes all three. Every load reads all three and merges.
+     ============================================================ */
+
+  /* ---- layer 1: localStorage ---- */
+  function lsLoad(){
     try{
       var raw = localStorage.getItem(KEY);
       if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
     }catch(e){}
     return null;
   }
-  function save(list){
-    localStorage.setItem(KEY, JSON.stringify(list));   /* throws on failure — caller catches */
-    return true;
+  function lsSave(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
+
+  /* ---- layer 2: IndexedDB ---- */
+  function idbOpen(){
+    return new Promise(function(res, rej){
+      try{
+        var rq = indexedDB.open(DBN, 1);
+        rq.onupgradeneeded = function(){ rq.result.createObjectStore(STORE); };
+        rq.onsuccess = function(){ res(rq.result); };
+        rq.onerror   = function(){ rej(rq.error); };
+      }catch(e){ rej(e); }
+    });
+  }
+  function idbSave(list){
+    return idbOpen().then(function(db){
+      return new Promise(function(res, rej){
+        var t = db.transaction(STORE, "readwrite");
+        t.objectStore(STORE).put(JSON.stringify(list), "all");
+        t.oncomplete = function(){ res(true); };
+        t.onerror    = function(){ rej(t.error); };
+      });
+    }).catch(function(){ return false; });
+  }
+  function idbLoad(){
+    return idbOpen().then(function(db){
+      return new Promise(function(res){
+        var t = db.transaction(STORE, "readonly");
+        var q = t.objectStore(STORE).get("all");
+        q.onsuccess = function(){
+          try{ var v = JSON.parse(q.result); res(Array.isArray(v) ? v : null); }
+          catch(e){ res(null); }
+        };
+        q.onerror = function(){ res(null); };
+      });
+    }).catch(function(){ return null; });
   }
 
-  /* Rescue: if the new key is empty, look for readings written under an older key. */
+  /* ---- layer 3: the data link ---- */
+  function encode(list){
+    var str = list.map(function(r){
+      return [r.date,
+              r.weight == null ? "" : r.weight,
+              r.waist  == null ? "" : r.waist,
+              r.nf ? 1 : 0].join(",");
+    }).join(";");
+    try{
+      return btoa(unescape(encodeURIComponent(str)))
+        .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+    }catch(e){ return ""; }
+  }
+  function decode(code){
+    try{
+      var b = code.replace(/-/g,"+").replace(/_/g,"/");
+      while(b.length % 4) b += "=";
+      var str = decodeURIComponent(escape(atob(b)));
+      return str.split(";").filter(Boolean).map(function(p){
+        var a = p.split(",");
+        return { date:a[0],
+                 weight:a[1] === "" ? null : Number(a[1]),
+                 waist: a[2] === "" ? null : Number(a[2]),
+                 nf:    a[3] === "1" };
+      }).filter(function(r){ return /^\d{4}-\d{2}-\d{2}$/.test(r.date); });
+    }catch(e){ return null; }
+  }
+  function dataLink(){
+    return location.origin + location.pathname + "#d=" + encode(data);
+  }
+  function hashData(){
+    var h = location.hash || "";
+    var m = h.match(/#d=(.+)$/);
+    return m ? decode(m[1]) : null;
+  }
+
+  /* ---- merge: one entry per date, richest record wins ---- */
+  function merge(){
+    var by = {};
+    Array.prototype.slice.call(arguments).forEach(function(list){
+      if(!list) return;
+      list.forEach(function(r){
+        if(!r || !r.date) return;
+        var cur = by[r.date];
+        if(!cur){ by[r.date] = r; return; }
+        by[r.date] = {
+          date: r.date,
+          weight: r.weight != null ? r.weight : cur.weight,
+          waist:  r.waist  != null ? r.waist  : cur.waist,
+          nf: cur.nf || r.nf
+        };
+      });
+    });
+    return Object.keys(by).map(function(k){ return by[k]; });
+  }
+
+  /* ---- write everywhere ---- */
+  function persist(){
+    var okLS = true;
+    try{ lsSave(data); }catch(e){ okLS = false; }
+    idbSave(data);
+    try{ history.replaceState(null, "", "#d=" + encode(data)); }catch(e){}
+    return okLS;
+  }
+
+  /* ---- ask the browser not to evict us ---- */
+  if(navigator.storage && navigator.storage.persist){
+    navigator.storage.persisted().then(function(already){
+      if(!already) return navigator.storage.persist();
+    }).catch(function(){});
+  }
+
+  /* ---- legacy rescue, kept from the previous build ---- */
   function rescue(){
-    var found = [];
-    var keys = [];
+    var found = [], keys = [];
     try{ for(var i=0;i<localStorage.length;i++) keys.push(localStorage.key(i)); }catch(e){ return found; }
     keys.forEach(function(k){
       if(k === KEY) return;
@@ -238,19 +370,63 @@
     return found;
   }
 
-  var SEED = [
-    { date:"2026-08-17", weight:81.5, waist:103, nf:false },
-    { date:"2026-09-01", weight:81.9, waist:102, nf:false }
-  ];
-
-  var data = load();
-  var firstRun = false;
-  if(!data){
-    firstRun = true;
-    var r = rescue();
-    data = r.length ? r : SEED.slice();
-    try{ save(data); }catch(e){}
+  /* ---- banner ---- */
+  function banner(html, good){
+    var el = document.getElementById("alertBar");
+    el.innerHTML = html;
+    el.className = good ? "alert ok" : "alert";
+    el.hidden = false;
   }
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  var data;
+  var ls   = lsLoad();
+  var link = hashData();
+  var firstRun = false;
+  var recovered = null;
+
+  if(ls && ls.length){
+    data = merge(ls, link);
+  }else if(link && link.length){
+    data = link;
+    recovered = "link";
+  }else{
+    var r = rescue();
+    if(r.length){ data = r; recovered = "legacy"; }
+    else { data = SEED.slice(); firstRun = true; }
+  }
+
+  /* write straight back so all three layers agree */
+  var storageWorks = persist();
+
+  if(!storageWorks){
+    banner("<strong>This browser is blocking storage.</strong>Private browsing does that. Open the app in a normal tab, "
+         + "or use <em>Copy my data link</em> before you close it \u2014 otherwise nothing you enter here will survive.");
+  }else if(recovered === "link"){
+    banner("<strong>Your browser had cleared the saved readings.</strong>I have rebuilt them from your data link \u2014 "
+         + "nothing lost. Take a fresh link once you have added today\u2019s reading.", true);
+  }else if(recovered === "legacy"){
+    banner("<strong>Readings recovered from an older version of the app.</strong>They have been written back properly. "
+         + "Take a data link now so this cannot happen again.", true);
+  }
+
+  /* IndexedDB is async — reconcile once it answers, in case localStorage was
+     the layer that got wiped and IndexedDB still holds the truth. */
+  idbLoad().then(function(idb){
+    if(!idb || !idb.length) return;
+    var before = data.length;
+    var mergedNow = merge(data, idb);
+    if(mergedNow.length > before){
+      data = mergedNow;
+      persist();
+      renderAll();
+      banner("<strong>Recovered " + (mergedNow.length - before) + " reading(s) the browser had dropped.</strong>"
+           + "They came back from the app\u2019s second storage layer. Nothing for you to do.", true);
+    }
+  });
+
 
   function sorted(){ return data.slice().sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }); }
   function trendPts(field){
@@ -444,22 +620,17 @@
       data.push(entry);
     }
 
-    try{
-      save(data);
-    }catch(err){
-      data = load() || [];
-      renderAll();
-      say("Couldn't save — this browser is blocking storage. Private browsing does that.", true);
+    if(!persist()){
+      say("Couldn't write to storage \u2014 use Copy my data link before closing this tab.", true);
       return;
     }
 
-    /* Read it straight back. If it isn't there, the save silently failed. */
-    var check = load();
+    /* Read it straight back out of localStorage. If it isn't there, the save failed. */
+    var check = lsLoad();
     if(!check || !check.some(function(r){ return r.date === date; })){
-      say("Save didn't stick. Download a backup and tell Claude.", true);
+      say("Save didn't stick. Tap Copy my data link right now to keep this reading.", true);
       return;
     }
-    data = check;
 
     elW.value = ""; elX.value = ""; elN.checked = false;
     renderAll();
@@ -472,7 +643,7 @@
     var d = b.getAttribute("data-date");
     if(!confirm("Remove the reading from " + shortDate(d) + "?")) return;
     data = data.filter(function(r){ return r.date !== d; });
-    try{ save(data); }catch(err){}
+    persist();
     renderAll();
     say("Removed " + shortDate(d));
   });
@@ -501,7 +672,7 @@
         var byDate = {};
         data.concat(v).forEach(function(r){ if(r && r.date) byDate[r.date] = r; });
         data = Object.keys(byDate).map(function(k){ return byDate[k]; });
-        save(data);
+        persist();
         renderAll();
         say("Restored — " + data.length + " readings, merged with what was here.");
       }catch(err){
@@ -510,6 +681,23 @@
     };
     fr.readAsText(f);
     e.target.value = "";
+  });
+
+  document.getElementById("btnLink").addEventListener("click", function(){
+    var url = dataLink();
+    function shown(){
+      banner("<strong>Data link copied \u2014 paste it somewhere safe now.</strong>"
+           + "A note to yourself, an email, a bookmark. Every reading is inside this link, so opening it on any "
+           + "device or browser restores everything."
+           + "<div class=\"linkbox\">" + url + "</div>", true);
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(shown, shown);
+    }else{
+      shown();
+    }
+    say("Data link ready \u2014 see the top of the page.");
   });
 
   renderAll();
