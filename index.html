@@ -62,7 +62,15 @@
     background:var(--card);border:1px solid var(--rule);border-radius:3px;
     padding:1rem .8rem .8rem;box-shadow:var(--shadow);
   }
-  .chart{width:100%;height:200px;display:block;overflow:visible}
+  .chart{width:100%;height:225px;display:block;overflow:visible}
+  .xtoggle{display:flex;gap:0;margin:2.2rem 0 -1rem;border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:var(--card)}
+  .xtoggle button{
+    flex:1;background:transparent;color:var(--ink-soft);border:0;border-radius:0;
+    font-size:.85rem;padding:.55rem .4rem;
+  }
+  .xtoggle button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .proj{margin:.6rem .3rem 0;font-size:.85rem;color:var(--ink-soft);min-height:1.2em}
+  .key i.dash{width:1.1rem;height:0;border-radius:0;border-top:2px dashed var(--weight);background:none!important;opacity:.6}
   .key{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);padding:.6rem .3rem 0}
   .key i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-1px}
   .empty{color:var(--ink-soft);font-size:.9rem;padding:2.4rem .8rem;text-align:center}
@@ -108,18 +116,6 @@
   .tools{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.4rem}
   .tools button{font-size:.85rem;padding:.5rem .8rem}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-
-  .alert{
-    background:#FDF3E3;border:1px solid #D9B872;border-left:4px solid var(--flag);
-    border-radius:3px;padding:.9rem 1rem;margin:0 0 1.4rem;font-size:.9rem;
-  }
-  .alert strong{display:block;margin-bottom:.25rem}
-  .alert.ok{background:#EDF4EE;border-color:#9CBCA4;border-left-color:var(--good)}
-  .linkbox{
-    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;
-    word-break:break-all;background:var(--paper);border:1px solid var(--rule);
-    border-radius:3px;padding:.6rem;margin-top:.6rem;color:var(--ink-soft);
-  }
 </style>
 </head>
 <body>
@@ -130,28 +126,34 @@
     <p class="meta">172&nbsp;cm · started 81.5&nbsp;kg on 17 August 2026 · target BMI 25 by Christmas</p>
   </header>
 
-  <div class="alert" id="alertBar" hidden></div>
-
   <section class="gap" id="gap">
     <div class="gap-fig"><strong id="gapKg">—</strong><span id="gapWord">to go</span></div>
     <p class="gap-sub" id="gapSub"></p>
     <div class="tape"><svg id="tape" viewBox="0 0 600 46" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   </section>
 
+  <div class="xtoggle" role="group" aria-label="Chart range">
+    <button type="button" data-x="now" aria-pressed="true">Readings so far</button>
+    <button type="button" data-x="xmas" aria-pressed="false">Through to Christmas</button>
+  </div>
+
   <h2>The trend</h2>
   <p class="sub">Weight in kilograms. The dotted line is 73.9&nbsp;kg — BMI 25 at your height.</p>
   <div class="panel">
-    <svg class="chart" id="chartW" viewBox="0 0 600 200" preserveAspectRatio="none"></svg>
+    <svg class="chart" id="chartW" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+    <p class="proj" id="projW"></p>
     <div class="key">
       <span><i style="background:var(--weight)"></i>Fasted reading</span>
       <span><i style="background:#fff;border:2px solid var(--weight)"></i>Not fasted — excluded from the trend</span>
+      <span><i class="dash" style="background:var(--weight)"></i>Projection from your current rate</span>
     </div>
   </div>
 
   <h2>Waist</h2>
   <p class="sub">Centimetres. 94 is the raised-risk line for men; 86 is half your height, the longer-run destination.</p>
   <div class="panel">
-    <svg class="chart" id="chartX" viewBox="0 0 600 200" preserveAspectRatio="none"></svg>
+    <svg class="chart" id="chartX" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+    <p class="proj" id="projX"></p>
   </div>
 
   <h2>Add a reading</h2>
@@ -187,7 +189,6 @@
   <div class="tools">
     <button type="button" class="ghost" id="btnExport">Download a backup</button>
     <button type="button" class="ghost" id="btnImport">Restore from a backup</button>
-    <button type="button" class="ghost" id="btnLink">Copy my data link</button>
     <input type="file" id="fileIn" accept="application/json,.json" hidden>
   </div>
 
@@ -197,8 +198,7 @@
     <p>Weigh the same way every time — morning, after the loo, before food, minimal clothing. Readings ticked as not fasted show as hollow dots and sit outside the trend, because clothes and a meal are worth well over a kilo and would otherwise look like real change.</p>
     <p>BMI is just your weight divided by 2.958, so it can't tell you anything the weight doesn't. <strong>Waist is the better number.</strong> It tracks visceral fat, which is what you're actually trying to shift, and it moves more slowly but more honestly than the scale.</p>
     <p>Roughly one centimetre of waist goes with each kilogram lost in this range. Eight kilograms takes you from 102 to about 94 — the working target. 86 needs closer to sixteen, so treat it as next year's line, not this one's.</p>
-    <p>Your readings are now held in three places at once: this browser’s local storage, a database inside the browser, and the data link. If the browser clears one, the app rebuilds from the others.</p>
-    <p><strong>Do this once and it can never bite you again:</strong> tap <em>Copy my data link</em>, paste it into a note or an email to yourself, and keep it. That link contains every reading. Opening it on any device or any browser restores the lot. Take a fresh one every month or so.</p>
+    <p>Your readings live on this device only. <strong>Download a backup every few weeks</strong> — clearing your browser data would otherwise take the lot.</p>
   </div>
 
 </div>
@@ -208,145 +208,29 @@
   "use strict";
 
   var KEY = "ww-readings-v2";
-  var DBN = "ww-db", STORE = "readings";
+  var LEGACY = ["weightTracker","weight-readings","ww-readings","bmiTracker","readings","weightAndBMI"];
   var H2 = 1.72 * 1.72;          /* 2.9584 */
   var TARGET_KG = 73.9;          /* BMI 25 */
   var TARGET_DATE = "2026-12-25";
   var WAIST_NEAR = 94, WAIST_FAR = 86;
 
-  var SEED = [
-    { date:"2026-08-17", weight:81.5, waist:103, nf:false },
-    { date:"2026-09-01", weight:81.9, waist:102, nf:false }
-  ];
-
-  /* ============================================================
-     STORAGE — three independent layers.
-     1. localStorage   fast, but browsers evict it
-     2. IndexedDB      separate bucket, often survives a localStorage clear
-     3. the data link  lives outside the device entirely
-     Every save writes all three. Every load reads all three and merges.
-     ============================================================ */
-
-  /* ---- layer 1: localStorage ---- */
-  function lsLoad(){
+  /* ---------------- storage ---------------- */
+  function load(){
     try{
       var raw = localStorage.getItem(KEY);
       if(raw){ var v = JSON.parse(raw); if(Array.isArray(v)) return v; }
     }catch(e){}
     return null;
   }
-  function lsSave(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
-
-  /* ---- layer 2: IndexedDB ---- */
-  function idbOpen(){
-    return new Promise(function(res, rej){
-      try{
-        var rq = indexedDB.open(DBN, 1);
-        rq.onupgradeneeded = function(){ rq.result.createObjectStore(STORE); };
-        rq.onsuccess = function(){ res(rq.result); };
-        rq.onerror   = function(){ rej(rq.error); };
-      }catch(e){ rej(e); }
-    });
-  }
-  function idbSave(list){
-    return idbOpen().then(function(db){
-      return new Promise(function(res, rej){
-        var t = db.transaction(STORE, "readwrite");
-        t.objectStore(STORE).put(JSON.stringify(list), "all");
-        t.oncomplete = function(){ res(true); };
-        t.onerror    = function(){ rej(t.error); };
-      });
-    }).catch(function(){ return false; });
-  }
-  function idbLoad(){
-    return idbOpen().then(function(db){
-      return new Promise(function(res){
-        var t = db.transaction(STORE, "readonly");
-        var q = t.objectStore(STORE).get("all");
-        q.onsuccess = function(){
-          try{ var v = JSON.parse(q.result); res(Array.isArray(v) ? v : null); }
-          catch(e){ res(null); }
-        };
-        q.onerror = function(){ res(null); };
-      });
-    }).catch(function(){ return null; });
+  function save(list){
+    localStorage.setItem(KEY, JSON.stringify(list));   /* throws on failure — caller catches */
+    return true;
   }
 
-  /* ---- layer 3: the data link ---- */
-  function encode(list){
-    var str = list.map(function(r){
-      return [r.date,
-              r.weight == null ? "" : r.weight,
-              r.waist  == null ? "" : r.waist,
-              r.nf ? 1 : 0].join(",");
-    }).join(";");
-    try{
-      return btoa(unescape(encodeURIComponent(str)))
-        .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-    }catch(e){ return ""; }
-  }
-  function decode(code){
-    try{
-      var b = code.replace(/-/g,"+").replace(/_/g,"/");
-      while(b.length % 4) b += "=";
-      var str = decodeURIComponent(escape(atob(b)));
-      return str.split(";").filter(Boolean).map(function(p){
-        var a = p.split(",");
-        return { date:a[0],
-                 weight:a[1] === "" ? null : Number(a[1]),
-                 waist: a[2] === "" ? null : Number(a[2]),
-                 nf:    a[3] === "1" };
-      }).filter(function(r){ return /^\d{4}-\d{2}-\d{2}$/.test(r.date); });
-    }catch(e){ return null; }
-  }
-  function dataLink(){
-    return location.origin + location.pathname + "#d=" + encode(data);
-  }
-  function hashData(){
-    var h = location.hash || "";
-    var m = h.match(/#d=(.+)$/);
-    return m ? decode(m[1]) : null;
-  }
-
-  /* ---- merge: one entry per date, richest record wins ---- */
-  function merge(){
-    var by = {};
-    Array.prototype.slice.call(arguments).forEach(function(list){
-      if(!list) return;
-      list.forEach(function(r){
-        if(!r || !r.date) return;
-        var cur = by[r.date];
-        if(!cur){ by[r.date] = r; return; }
-        by[r.date] = {
-          date: r.date,
-          weight: r.weight != null ? r.weight : cur.weight,
-          waist:  r.waist  != null ? r.waist  : cur.waist,
-          nf: cur.nf || r.nf
-        };
-      });
-    });
-    return Object.keys(by).map(function(k){ return by[k]; });
-  }
-
-  /* ---- write everywhere ---- */
-  function persist(){
-    var okLS = true;
-    try{ lsSave(data); }catch(e){ okLS = false; }
-    idbSave(data);
-    try{ history.replaceState(null, "", "#d=" + encode(data)); }catch(e){}
-    return okLS;
-  }
-
-  /* ---- ask the browser not to evict us ---- */
-  if(navigator.storage && navigator.storage.persist){
-    navigator.storage.persisted().then(function(already){
-      if(!already) return navigator.storage.persist();
-    }).catch(function(){});
-  }
-
-  /* ---- legacy rescue, kept from the previous build ---- */
+  /* Rescue: if the new key is empty, look for readings written under an older key. */
   function rescue(){
-    var found = [], keys = [];
+    var found = [];
+    var keys = [];
     try{ for(var i=0;i<localStorage.length;i++) keys.push(localStorage.key(i)); }catch(e){ return found; }
     keys.forEach(function(k){
       if(k === KEY) return;
@@ -370,63 +254,23 @@
     return found;
   }
 
-  /* ---- banner ---- */
-  function banner(html, good){
-    var el = document.getElementById("alertBar");
-    el.innerHTML = html;
-    el.className = good ? "alert ok" : "alert";
-    el.hidden = false;
-  }
+  var SEED = [
+    { date:"2026-08-17", weight:81.5, waist:103, nf:false },
+    { date:"2026-09-01", weight:81.9, waist:102, nf:false }
+  ];
 
-  /* ============================================================
-     BOOT
-     ============================================================ */
-  var data;
-  var ls   = lsLoad();
-  var link = hashData();
+  /* Which horizontal range the charts use: "now" fits the readings, "xmas" runs to 25 Dec. */
+  var xMode = "now";
+  try{ var pm = localStorage.getItem("ww-xmode"); if(pm === "now" || pm === "xmas") xMode = pm; }catch(e){}
+
+  var data = load();
   var firstRun = false;
-  var recovered = null;
-
-  if(ls && ls.length){
-    data = merge(ls, link);
-  }else if(link && link.length){
-    data = link;
-    recovered = "link";
-  }else{
+  if(!data){
+    firstRun = true;
     var r = rescue();
-    if(r.length){ data = r; recovered = "legacy"; }
-    else { data = SEED.slice(); firstRun = true; }
+    data = r.length ? r : SEED.slice();
+    try{ save(data); }catch(e){}
   }
-
-  /* write straight back so all three layers agree */
-  var storageWorks = persist();
-
-  if(!storageWorks){
-    banner("<strong>This browser is blocking storage.</strong>Private browsing does that. Open the app in a normal tab, "
-         + "or use <em>Copy my data link</em> before you close it \u2014 otherwise nothing you enter here will survive.");
-  }else if(recovered === "link"){
-    banner("<strong>Your browser had cleared the saved readings.</strong>I have rebuilt them from your data link \u2014 "
-         + "nothing lost. Take a fresh link once you have added today\u2019s reading.", true);
-  }else if(recovered === "legacy"){
-    banner("<strong>Readings recovered from an older version of the app.</strong>They have been written back properly. "
-         + "Take a data link now so this cannot happen again.", true);
-  }
-
-  /* IndexedDB is async — reconcile once it answers, in case localStorage was
-     the layer that got wiped and IndexedDB still holds the truth. */
-  idbLoad().then(function(idb){
-    if(!idb || !idb.length) return;
-    var before = data.length;
-    var mergedNow = merge(data, idb);
-    if(mergedNow.length > before){
-      data = mergedNow;
-      persist();
-      renderAll();
-      banner("<strong>Recovered " + (mergedNow.length - before) + " reading(s) the browser had dropped.</strong>"
-           + "They came back from the app\u2019s second storage layer. Nothing for you to do.", true);
-    }
-  });
-
 
   function sorted(){ return data.slice().sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }); }
   function trendPts(field){
@@ -490,63 +334,143 @@
   }
 
   /* ---------------- charts ---------------- */
-  function drawChart(id, field, colour, lines){
+
+  /* Least-squares fit over the fasted readings. Returns kg (or cm) per day, plus
+     the intercept, so the line can be run forward to meet the target. */
+  function fit(points, field, t0){
+    var n = points.length;
+    if(n < 2) return null;
+    var xs = points.map(function(r){ return (new Date(r.date).getTime() - t0) / 86400000; });
+    var ys = points.map(function(r){ return r[field]; });
+    var mx = xs.reduce(function(a,b){ return a+b; }, 0) / n;
+    var my = ys.reduce(function(a,b){ return a+b; }, 0) / n;
+    var num = 0, den = 0;
+    for(var i=0;i<n;i++){ num += (xs[i]-mx)*(ys[i]-my); den += (xs[i]-mx)*(xs[i]-mx); }
+    if(den === 0) return null;
+    var slope = num/den;
+    return { slope:slope, intercept: my - slope*mx, lastX: xs[n-1] };
+  }
+
+  /* When does the fitted line reach `target`? Returns days since t0, or null. */
+  function crossingDay(f, target){
+    if(!f || f.slope >= -0.0001) return null;
+    var d = (target - f.intercept) / f.slope;
+    return (d > f.lastX) ? d : null;
+  }
+
+  function drawChart(id, field, colour, lines, projectTo){
     var svg = document.getElementById(id);
     var all = sorted().filter(function(r){ return r[field] != null && isFinite(r[field]); });
     if(all.length === 0){
-      svg.innerHTML = '<text x="300" y="100" text-anchor="middle" fill="#4A5C64" font-size="14" font-family="system-ui">Add a reading to start the line</text>';
-      return;
+      svg.innerHTML = '<text x="300" y="110" text-anchor="middle" fill="#4A5C64" font-size="15" font-family="system-ui">Add a reading to start the line</text>';
+      return null;
     }
 
-    var W = 600, H = 200, PL = 42, PR = 12, PT = 14, PB = 26;
+    var W = 600, H = 220, PL = 48, PR = 14, PT = 16, PB = 32;
+    var DAY = 86400000;
+    var t0 = new Date(all[0].date).getTime();
+    var tLast = new Date(all[all.length-1].date).getTime();
+
+    var tp = all.filter(function(r){ return !r.nf; });
+    var f = fit(tp, field, t0);
+    var xc = projectTo != null ? crossingDay(f, projectTo) : null;
+
+    /* --- horizontal extent --- */
+    var t1;
+    if(xMode === "xmas"){
+      t1 = Math.max(tLast, new Date(TARGET_DATE).getTime());
+    }else{
+      /* fit the width to the data, plus the projection if it lands soon after */
+      t1 = tLast;
+      if(xc != null){
+        var tCross = t0 + xc*DAY;
+        if(tCross < tLast + 70*DAY) t1 = tCross;   /* show it only if within ~10 weeks */
+      }
+      t1 = Math.max(t1, tLast + 3*DAY);
+    }
+    if(t1 <= t0) t1 = t0 + DAY;
+
+    /* --- vertical extent --- */
     var vals = all.map(function(r){ return r[field]; });
-    lines.forEach(function(l){ vals.push(l.at); });
+    lines.forEach(function(l){
+      /* in "so far" mode, only include a target line if it's close to the data */
+      if(xMode === "xmas" || Math.abs(l.at - vals[vals.length-1]) < 12) vals.push(l.at);
+    });
     var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-    var pad = Math.max((hi - lo) * 0.15, 0.6);
+    var pad = Math.max((hi - lo) * 0.14, 0.8);
     lo -= pad; hi += pad;
 
-    var t0 = new Date(all[0].date).getTime();
-    var t1 = new Date(all[all.length-1].date).getTime();
-    var tEnd = new Date(TARGET_DATE).getTime();
-    if(tEnd > t1) t1 = tEnd;
-    if(t1 === t0) t1 = t0 + 86400000;
-
-    function X(iso){ return PL + (new Date(iso).getTime() - t0) / (t1 - t0) * (W - PL - PR); }
+    function X(ms){ return PL + (ms - t0) / (t1 - t0) * (W - PL - PR); }
+    function Xd(iso){ return X(new Date(iso).getTime()); }
     function Y(v){ return PT + (hi - v) / (hi - lo) * (H - PT - PB); }
+    function clampX(x){ return Math.max(PL, Math.min(W - PR, x)); }
 
     var s = "";
 
     /* target lines */
     lines.forEach(function(l){
+      if(l.at > hi || l.at < lo) return;
       var y = Y(l.at).toFixed(1);
-      s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+l.colour+'" stroke-width="1" stroke-dasharray="4 4" opacity="0.75"/>';
-      s += '<text x="'+(W-PR)+'" y="'+(y-5)+'" text-anchor="end" font-size="11" fill="'+l.colour+'" font-family="system-ui">'+l.label+'</text>';
+      s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+l.colour+'" stroke-width="1" stroke-dasharray="4 4" opacity="0.8"/>';
+      s += '<text x="'+(W-PR)+'" y="'+(y-6)+'" text-anchor="end" font-size="13" fill="'+l.colour+'" font-family="system-ui">'+l.label+'</text>';
     });
 
-    /* axis */
+    /* y axis */
     [hi, (hi+lo)/2, lo].forEach(function(v){
-      s += '<text x="'+(PL-8)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#4A5C64" font-family="Georgia,serif">'+v.toFixed(1)+'</text>';
+      s += '<text x="'+(PL-9)+'" y="'+(Y(v)+5).toFixed(1)+'" text-anchor="end" font-size="13" fill="#4A5C64" font-family="Georgia,serif">'+v.toFixed(1)+'</text>';
     });
+
+    /* projection — faint dashes from the last reading onward */
+    if(f && f.slope < 0){
+      var endX, endV;
+      if(xc != null && t0 + xc*DAY <= t1){
+        endX = X(t0 + xc*DAY); endV = projectTo;
+      }else{
+        var endDay = (t1 - t0)/DAY;
+        endX = X(t1); endV = f.intercept + f.slope*endDay;
+      }
+      if(endV > lo - 50){
+        s += '<path d="M'+Xd(all[all.length-1].date).toFixed(1)+' '+Y(tp.length?tp[tp.length-1][field]:all[all.length-1][field]).toFixed(1)
+           + ' L'+clampX(endX).toFixed(1)+' '+Y(Math.max(endV, lo)).toFixed(1)+'" '
+           + 'fill="none" stroke="'+colour+'" stroke-width="2" stroke-dasharray="3 5" opacity="0.5"/>';
+        if(xc != null && t0 + xc*DAY <= t1){
+          s += '<circle cx="'+clampX(endX).toFixed(1)+'" cy="'+Y(projectTo).toFixed(1)+'" r="4.5" fill="none" stroke="'+colour+'" stroke-width="2" opacity="0.7"/>';
+        }
+      }
+    }
 
     /* trend line — fasted readings only */
-    var tp = all.filter(function(r){ return !r.nf; });
     if(tp.length > 1){
-      var d = tp.map(function(r,i){ return (i?"L":"M") + X(r.date).toFixed(1) + " " + Y(r[field]).toFixed(1); }).join(" ");
+      var d = tp.map(function(r,i){ return (i?"L":"M") + Xd(r.date).toFixed(1) + " " + Y(r[field]).toFixed(1); }).join(" ");
       s += '<path d="'+d+'" fill="none" stroke="'+colour+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     }
 
     /* dots */
     all.forEach(function(r){
-      var cx = X(r.date).toFixed(1), cy = Y(r[field]).toFixed(1);
-      if(r.nf) s += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#FBFCFB" stroke="'+colour+'" stroke-width="2"/>';
-      else     s += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="'+colour+'"/>';
+      var cx = Xd(r.date).toFixed(1), cy = Y(r[field]).toFixed(1);
+      if(r.nf) s += '<circle cx="'+cx+'" cy="'+cy+'" r="4.5" fill="#FBFCFB" stroke="'+colour+'" stroke-width="2"/>';
+      else     s += '<circle cx="'+cx+'" cy="'+cy+'" r="4.5" fill="'+colour+'"/>';
     });
 
-    /* first and last date labels */
-    s += '<text x="'+PL+'" y="'+(H-6)+'" font-size="11" fill="#4A5C64" font-family="system-ui">'+shortDate(all[0].date)+'</text>';
-    s += '<text x="'+(W-PR)+'" y="'+(H-6)+'" text-anchor="end" font-size="11" fill="#4A5C64" font-family="system-ui">25 Dec</text>';
+    /* date labels */
+    var rightLabel = (xMode === "xmas") ? "25 Dec" : shortDate(isoOf(t1));
+    s += '<text x="'+PL+'" y="'+(H-8)+'" font-size="13" fill="#4A5C64" font-family="system-ui">'+shortDate(all[0].date)+'</text>';
+    s += '<text x="'+(W-PR)+'" y="'+(H-8)+'" text-anchor="end" font-size="13" fill="#4A5C64" font-family="system-ui">'+rightLabel+'</text>';
 
+    svg.setAttribute("viewBox", "0 0 600 220");
     svg.innerHTML = s;
+
+    return (xc != null) ? isoOf(t0 + xc*DAY) : null;
+  }
+
+  function isoOf(ms){
+    var d = new Date(ms);
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  function longDate(iso){
+    var m = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var d = new Date(iso + "T00:00:00");
+    return d.getDate()+" "+m[d.getMonth()];
   }
 
   function shortDate(iso){
@@ -573,11 +497,23 @@
 
   function renderAll(){
     renderGap();
-    drawChart("chartW","weight","var(--weight)",[{at:TARGET_KG,label:"73.9 — BMI 25",colour:"var(--good)"}]);
-    drawChart("chartX","waist","var(--waist)",[
-      {at:WAIST_NEAR,label:"94",colour:"var(--flag)"},
-      {at:WAIST_FAR, label:"86",colour:"var(--good)"}
-    ]);
+
+    var cW = drawChart("chartW","weight","var(--weight)",
+      [{at:TARGET_KG,label:"73.9 — BMI 25",colour:"var(--good)"}], TARGET_KG);
+    var cX = drawChart("chartX","waist","var(--waist)",
+      [{at:WAIST_NEAR,label:"94",colour:"var(--flag)"},{at:WAIST_FAR,label:"86",colour:"var(--good)"}], WAIST_NEAR);
+
+    document.getElementById("projW").textContent = cW
+      ? "At the current rate, 73.9 kg lands around " + longDate(cW) + "."
+      : "";
+    document.getElementById("projX").textContent = cX
+      ? "At the current rate, 94 cm lands around " + longDate(cX) + "."
+      : "";
+
+    document.querySelectorAll("[data-x]").forEach(function(b){
+      b.setAttribute("aria-pressed", b.getAttribute("data-x") === xMode ? "true" : "false");
+    });
+
     renderList();
   }
 
@@ -620,17 +556,22 @@
       data.push(entry);
     }
 
-    if(!persist()){
-      say("Couldn't write to storage \u2014 use Copy my data link before closing this tab.", true);
+    try{
+      save(data);
+    }catch(err){
+      data = load() || [];
+      renderAll();
+      say("Couldn't save — this browser is blocking storage. Private browsing does that.", true);
       return;
     }
 
-    /* Read it straight back out of localStorage. If it isn't there, the save failed. */
-    var check = lsLoad();
+    /* Read it straight back. If it isn't there, the save silently failed. */
+    var check = load();
     if(!check || !check.some(function(r){ return r.date === date; })){
-      say("Save didn't stick. Tap Copy my data link right now to keep this reading.", true);
+      say("Save didn't stick. Download a backup and tell Claude.", true);
       return;
     }
+    data = check;
 
     elW.value = ""; elX.value = ""; elN.checked = false;
     renderAll();
@@ -643,9 +584,17 @@
     var d = b.getAttribute("data-date");
     if(!confirm("Remove the reading from " + shortDate(d) + "?")) return;
     data = data.filter(function(r){ return r.date !== d; });
-    persist();
+    try{ save(data); }catch(err){}
     renderAll();
     say("Removed " + shortDate(d));
+  });
+
+  document.querySelectorAll("[data-x]").forEach(function(b){
+    b.addEventListener("click", function(){
+      xMode = b.getAttribute("data-x");
+      try{ localStorage.setItem("ww-xmode", xMode); }catch(e){}
+      renderAll();
+    });
   });
 
   document.getElementById("btnExport").addEventListener("click", function(){
@@ -672,7 +621,7 @@
         var byDate = {};
         data.concat(v).forEach(function(r){ if(r && r.date) byDate[r.date] = r; });
         data = Object.keys(byDate).map(function(k){ return byDate[k]; });
-        persist();
+        save(data);
         renderAll();
         say("Restored — " + data.length + " readings, merged with what was here.");
       }catch(err){
@@ -681,23 +630,6 @@
     };
     fr.readAsText(f);
     e.target.value = "";
-  });
-
-  document.getElementById("btnLink").addEventListener("click", function(){
-    var url = dataLink();
-    function shown(){
-      banner("<strong>Data link copied \u2014 paste it somewhere safe now.</strong>"
-           + "A note to yourself, an email, a bookmark. Every reading is inside this link, so opening it on any "
-           + "device or browser restores everything."
-           + "<div class=\"linkbox\">" + url + "</div>", true);
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(shown, shown);
-    }else{
-      shown();
-    }
-    say("Data link ready \u2014 see the top of the page.");
   });
 
   renderAll();
